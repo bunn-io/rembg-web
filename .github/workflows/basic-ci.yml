@@ -2,10 +2,12 @@ name: Basic CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
-
+    branches: [main]
+env:
+  # For nektos/act to work (local testing)
+  IS_LOCAL: "${{ secrets.IS_LOCAL == 'true' }}"
 jobs:
   test:
     name: Test and Build
@@ -15,10 +17,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: For act to work (local testing)
+        if: ${{ env.IS_LOCAL == 'true' }}
+        run: npm -g install yarn
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           cache: 'yarn'
 
       - name: Install dependencies

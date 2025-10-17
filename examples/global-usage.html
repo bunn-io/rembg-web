@@ -126,7 +126,12 @@
 
     <script>
       // Access rembg-web via global variable
-      const { remove, newSession } = RembgWeb;
+      const { remove, newSession, rembgConfig } = RembgWeb;
+
+      // Configure model base URL
+      rembgConfig.setBaseUrl(
+        'https://github.com/bunn-io/rembg-web/releases/download/base-models'
+      );
 
       console.log('RembgWeb global object:', RembgWeb);
       console.log('Available functions:', Object.keys(RembgWeb));

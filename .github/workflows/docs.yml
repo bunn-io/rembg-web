@@ -2,9 +2,9 @@ name: Deploy Documentation
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -12,8 +12,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
+
+env:
+  # For nektos/act to work (local testing)
+  IS_LOCAL: "${{ secrets.IS_LOCAL == 'true' }}"
 
 jobs:
   build:
@@ -24,10 +28,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: For act to work (local testing)
+        if: ${{ env.IS_LOCAL == 'true' }}
+        run: npm -g install yarn
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22.x'
           cache: 'yarn'
 
       - name: Install dependencies
@@ -47,12 +55,15 @@ jobs:
         run: |
           mkdir -p docs-site/examples
           cp -r examples/* docs-site/examples/
-          
+
           # Convert local imports to CDN imports in example files
           find docs-site/examples -name "*.html" -exec sed -i 's|import.*from.*rembg-web.*|import { remove, newSession } from "https://unpkg.com/@bunnio/rembg-web@latest/dist/index.js";|g' {} \;
-          
+
           # Update model paths to use GitHub Releases with dynamic version
           find docs-site/examples -name "*.html" -exec sed -i "s|/models/|https://github.com/boldizsar-pal/rembg-web/releases/download/v${{ steps.version.outputs.version }}/|g" {} \;
+
+          # Update base URL configuration in examples to use GitHub releases
+          find docs-site/examples -name "*.html" -exec sed -i "s|https://github.com/bunn-io/rembg-web/releases/download/base-models|https://github.com/boldizsar-pal/rembg-web/releases/download/v${{ steps.version.outputs.version }}|g" {} \;
 
       - name: Build documentation pages
         run: yarn docs:build-pages

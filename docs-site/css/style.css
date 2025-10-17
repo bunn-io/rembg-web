@@ -533,3 +533,138 @@ body {
     font-size: 2rem;
   }
 }
+
+/* Examples styles */
+.examples-page {
+  padding: 2rem 0;
+}
+
+.examples-page .intro {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.example-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.example-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.example-card h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+}
+
+.example-card h3 a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.example-card h3 a:hover {
+  color: var(--primary-color);
+}
+
+.example-card p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.example-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.feature-tag {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.examples-info {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  margin-top: 3rem;
+}
+
+.examples-info h2 {
+  margin-bottom: 1rem;
+}
+
+.examples-info p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+/* Example documentation pages */
+.example-doc {
+  padding: 2rem 0;
+}
+
+.example-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.example-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.example-content {
+  margin-bottom: 3rem;
+}
+
+.example-iframe {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.example-source h3 {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .example-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .example-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .examples-grid {
+    grid-template-columns: 1fr;
+  }
+}

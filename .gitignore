@@ -36,3 +36,4 @@ yarn-error.log*
 # Model files (downloaded via fetch-models script)
 public/models/*.onnx
 !public/models/README.md
+docs-site/
