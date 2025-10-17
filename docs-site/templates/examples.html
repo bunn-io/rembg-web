@@ -1,0 +1,144 @@
+<div class="examples-page">
+  <h1>Examples</h1>
+  <p class="intro">
+    Explore interactive examples demonstrating different features and use cases
+    of rembg-web. Each example is fully functional and can be run directly in
+    your browser.
+  </p>
+
+  <div class="examples-grid">
+    <div class="example-card">
+      <h3><a href="basic-usage.html">Basic Usage</a></h3>
+      <p>
+        Simple background removal with file input and side-by-side comparison.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">File Input</span>
+        <span class="feature-tag">Progress Tracking</span>
+        <span class="feature-tag">Error Handling</span>
+      </div>
+      <a href="basic-usage.html" class="btn btn-primary">Try Example</a>
+    </div>
+
+    <div class="example-card">
+      <h3><a href="mask-only.html">Mask Only</a></h3>
+      <p>
+        Generate only the mask (black/white) instead of the full processed
+        image.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">Mask Generation</span>
+        <span class="feature-tag">Grayscale Output</span>
+        <span class="feature-tag">Custom Backgrounds</span>
+      </div>
+      <a href="mask-only.html" class="btn btn-primary">Try Example</a>
+    </div>
+
+    <div class="example-card">
+      <h3><a href="custom-background.html">Custom Background</a></h3>
+      <p>
+        Replace the background with a custom color using color picker and
+        transparency.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">Color Picker</span>
+        <span class="feature-tag">RGBA Support</span>
+        <span class="feature-tag">Real-time Preview</span>
+      </div>
+      <a href="custom-background.html" class="btn btn-primary">Try Example</a>
+    </div>
+
+    <div class="example-card">
+      <h3><a href="session-reuse.html">Session Reuse</a></h3>
+      <p>
+        Reuse sessions for better performance when processing multiple images.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">Performance</span>
+        <span class="feature-tag">Batch Processing</span>
+        <span class="feature-tag">Model Selection</span>
+      </div>
+      <a href="session-reuse.html" class="btn btn-primary">Try Example</a>
+    </div>
+
+    <div class="example-card">
+      <h3><a href="progress-tracking.html">Progress Tracking</a></h3>
+      <p>
+        Track progress during background removal with real-time updates and step
+        indicators.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">Progress UI</span>
+        <span class="feature-tag">Step Indicators</span>
+        <span class="feature-tag">Timestamps</span>
+      </div>
+      <a href="progress-tracking.html" class="btn btn-primary">Try Example</a>
+    </div>
+
+    <div class="example-card">
+      <h3><a href="cloth-segmentation.html">Cloth Segmentation</a></h3>
+      <p>
+        Advanced clothing segmentation with multiple mask outputs for different
+        clothing categories.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">Multi-mask</span>
+        <span class="feature-tag">Clothing Categories</span>
+        <span class="feature-tag">Advanced AI</span>
+      </div>
+      <a href="cloth-segmentation.html" class="btn btn-primary">Try Example</a>
+    </div>
+
+    <div class="example-card">
+      <h3><a href="global-usage.html">Global Usage</a></h3>
+      <p>
+        Use rembg-web via global variables (UMD build) instead of ES module
+        imports.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">UMD Build</span>
+        <span class="feature-tag">Global Variables</span>
+        <span class="feature-tag">CDN Ready</span>
+      </div>
+      <a href="global-usage.html" class="btn btn-primary">Try Example</a>
+    </div>
+
+    <div class="example-card">
+      <h3><a href="pixel-compare.html">Pixel Comparison</a></h3>
+      <p>
+        Compare two images pixel by pixel and highlight differences for testing
+        and validation.
+      </p>
+      <div class="example-features">
+        <span class="feature-tag">Image Comparison</span>
+        <span class="feature-tag">Difference Detection</span>
+        <span class="feature-tag">Testing Tools</span>
+      </div>
+      <a href="pixel-compare.html" class="btn btn-primary">Try Example</a>
+    </div>
+  </div>
+
+  <div class="examples-info">
+    <h2>Running Examples Locally</h2>
+    <p>
+      To run these examples locally, you'll need to serve them from a web
+      server:
+    </p>
+
+    <div class="code-block">
+      <pre><code># Quick start with development server
+yarn examples
+
+# Or with Python
+python3 -m http.server 8080
+
+# Or with Node.js
+npx http-server -p 8080</code></pre>
+    </div>
+
+    <p>
+      <strong>Important:</strong> Examples must be served through an HTTP server
+      to work properly due to CORS restrictions.
+    </p>
+  </div>
+</div>
