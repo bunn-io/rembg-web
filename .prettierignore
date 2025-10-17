@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-test/
+
+# Test results
+test-results/
+playwright-report/
+
+# Generated files
+*.d.ts
+*.js.map
+
+# Package files
+package-lock.json
+yarn.lock
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

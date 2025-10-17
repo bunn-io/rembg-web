@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Upload - Rembg Web Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+      }
+
+      .upload-section {
+        padding: 40px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .upload-area {
+        border: 3px dashed #dee2e6;
+        border-radius: 12px;
+        padding: 60px 20px;
+        text-align: center;
+        background: white;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .upload-area:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+      }
+
+      .upload-area.dragover {
+        border-color: #667eea;
+        background: #f0f2ff;
+        transform: scale(1.02);
+      }
+
+      .upload-icon {
+        font-size: 4rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+      }
+
+      .upload-text {
+        font-size: 1.2rem;
+        color: #495057;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .upload-subtext {
+        color: #6c757d;
+        font-size: 0.9rem;
+      }
+
+      .file-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .preview-section {
+        padding: 30px;
+        display: none;
+      }
+
+      .preview-section.active {
+        display: block;
+      }
+
+      .preview-container {
+        display: flex;
+        gap: 30px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .preview-box {
+        flex: 1;
+        min-width: 300px;
+        text-align: center;
+      }
+
+      .preview-box h3 {
+        margin-bottom: 15px;
+        color: #495057;
+        font-size: 1.2rem;
+      }
+
+      .preview-box img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .process-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 20px;
+      }
+
+      .process-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+      }
+
+      .process-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .progress-section {
+        padding: 30px;
+        display: none;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .progress-section.active {
+        display: block;
+      }
+
+      .progress-header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .progress-title {
+        font-size: 1.3rem;
+        color: #495057;
+        margin-bottom: 10px;
+      }
+
+      .progress-text {
+        color: #6c757d;
+        font-size: 1rem;
+      }
+
+      .progress-bar-container {
+        background: #e9ecef;
+        border-radius: 10px;
+        height: 20px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+
+      .progress-bar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 10px;
+      }
+
+      .model-progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .model-progress:last-child {
+        border-bottom: none;
+      }
+
+      .model-name {
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .model-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .model-status.pending {
+        background: #e9ecef;
+        color: #6c757d;
+      }
+
+      .model-status.processing {
+        background: #cce5ff;
+        color: #0066cc;
+      }
+
+      .model-status.completed {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .model-status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .results-section {
+        padding: 30px;
+        display: none;
+      }
+
+      .results-section.active {
+        display: block;
+      }
+
+      .results-title {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+        color: #495057;
+        font-weight: 600;
+      }
+
+      .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+      }
+
+      .result-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        border: 1px solid #e9ecef;
+      }
+
+      .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .result-card h4 {
+        text-align: center;
+        margin-bottom: 15px;
+        color: #495057;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: capitalize;
+      }
+
+      .result-card img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+      }
+
+      .error {
+        display: none;
+        background: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+      }
+
+      .error.active {
+        display: block;
+      }
+
+      .navigation {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-link {
+        color: #667eea;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        .preview-container {
+          flex-direction: column;
+        }
+
+        .results-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .nav-links {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>User Upload</h1>
+        <p>Process your images through all available models</p>
+      </div>
+
+      <div class="upload-section">
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Drop your image here or click to browse</div>
+          <div class="upload-subtext">
+            Supports JPG, PNG, and other common image formats
+          </div>
+          <input
+            type="file"
+            id="fileInput"
+            class="file-input"
+            accept="image/*"
+          />
+        </div>
+      </div>
+
+      <div class="preview-section" id="previewSection">
+        <div class="preview-container">
+          <div class="preview-box">
+            <h3>Your Image</h3>
+            <img id="previewImage" alt="Preview" />
+          </div>
+          <div class="preview-box">
+            <button id="processBtn" class="process-btn">
+              Process with All Models
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-section" id="progressSection">
+        <div class="progress-header">
+          <div class="progress-title">Processing Images</div>
+          <div class="progress-text" id="progressText">Initializing...</div>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="modelProgressList"></div>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="results-section" id="resultsSection">
+        <div class="results-title">Results</div>
+        <div class="results-grid" id="resultsGrid"></div>
+      </div>
+
+      <div class="navigation">
+        <a href="index.html" class="nav-link">← Back to Demo Navigation</a>
+      </div>
+    </div>
+
+    <script type="module" src="./user-upload.ts"></script>
+  </body>
+</html>

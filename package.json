@@ -1,4 +1,142 @@
 {
-  "name": "remb-node",
-  "packageManager": "yarn@4.6.0"
+    "name": "@bunnio/rembg-web",
+    "version": "1.0.0",
+    "description": "Shameless copy of danielgatis/rembg, but for the web. 90% organic GMO free AI generated code.",
+    "type": "module",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "browser": "dist/index.umd.js",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "browser": "./dist/index.umd.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./umd": "./dist/index.umd.js",
+        "./package.json": "./package.json"
+    },
+    "scripts": {
+        "build": "rollup -c",
+        "build:tsc": "tsc",
+        "build:watch": "rollup -c --watch",
+        "dev": "tsc --watch",
+        "clean": "rm -rf dist",
+        "prepublishOnly": "yarn clean && yarn flt && yarn build && yarn test",
+        "test": "yarn test:unit-dev && yarn test:e2e",
+        "test:unit": "vitest",
+        "test:unit-dev": "vitest --run",
+        "test:unit:ui": "vitest --ui",
+        "test:unit:coverage": "vitest --coverage",
+        "test:e2e": "playwright test",
+        "test:headed": "playwright test --headed",
+        "test:demo": "vite",
+        "serve:e2e": "vite --config e2e.server.config.js",
+        "analyze": "yarn build && npx bundlesize",
+        "size": "yarn build && du -sh dist/ && echo 'Bundle size analysis:' && find dist -name '*.js' -exec wc -c {} + | sort -n",
+        "examples": "yarn build && python3 -m http.server 8080 --directory .",
+        "flt": "yarn format && yarn lint && yarn type-check",
+        "lint": "eslint src/**/*.ts --ext .ts",
+        "lint:fix": "eslint src/**/*.ts --ext .ts --fix",
+        "format": "prettier --write src/**/*.ts",
+        "format:check": "prettier --check src/**/*.ts",
+        "type-check": "tsc --noEmit",
+        "build:min": "tsc && terser dist/index.js -o dist/index.min.js --compress --mangle",
+        "build:prod": "yarn build && yarn build:min",
+        "fetch-models": "tsx scripts/fetch-models.ts",
+        "docs:build": "typedoc",
+        "docs:build-pages": "tsx scripts/build-docs.ts",
+        "docs:serve": "typedoc --watch",
+        "publish:dry": "npm publish --dry-run",
+        "publish:beta": "npm publish --tag beta"
+    },
+    "keywords": [
+        "background-removal",
+        "image-segmentation",
+        "rembg",
+        "u2net",
+        "ai",
+        "machine-learning",
+        "browser",
+        "wasm",
+        "image-processing",
+        "onnx",
+        "computer-vision",
+        "canvas",
+        "web",
+        "typescript",
+        "javascript"
+    ],
+    "author": "Boldizsar Pal",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bunn-io/rembg-web"
+    },
+    "bugs": {
+        "url": "https://github.com/bunn-io/rembg-web/issues"
+    },
+    "homepage": "https://bunn-io.github.io/rembg-web/",
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "@webgpu/types": "^0.1.66",
+        "onnxruntime-web": "^1.23.0"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.56.0",
+        "@rollup/plugin-commonjs": "^28.0.1",
+        "@rollup/plugin-node-resolve": "^15.3.0",
+        "@rollup/plugin-terser": "^0.4.4",
+        "@rollup/plugin-typescript": "^12.1.0",
+        "@types/jsdom": "^27.0.0",
+        "@types/jszip": "^3.4.1",
+        "@types/node": "^24.7.2",
+        "@types/pngjs": "^6.0.5",
+        "@typescript-eslint/eslint-plugin": "^8.46.1",
+        "@typescript-eslint/parser": "^8.46.1",
+        "@vitest/ui": "^3.2.4",
+        "canvas": "^3.2.0",
+        "eslint": "^8.0.0",
+        "fake-indexeddb": "^6.2.3",
+        "jsdom": "^27.0.0",
+        "jszip": "^3.10.1",
+        "pngjs": "^7.0.0",
+        "prettier": "^3.0.0",
+        "rollup": "^4.28.1",
+        "terser": "^5.0.0",
+        "tslib": "^2.6.2",
+        "tsx": "^4.7.0",
+        "typedoc": "^0.25.0",
+        "typescript": "^5.0.0",
+        "vite": "^7.1.9",
+        "vitest": "^3.2.4",
+        "vitest-canvas-mock": "^0.3.3"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "browserslist": [
+        "> 1%",
+        "last 2 versions",
+        "not dead"
+    ],
+    "files": [
+        "dist/**/*",
+        "README.md",
+        "LICENSE"
+    ],
+    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+    "bundlesize": [
+        {
+            "path": "./dist/index.js",
+            "maxSize": "50 kB",
+            "compression": "gzip"
+        },
+        {
+            "path": "./dist/index.d.ts",
+            "maxSize": "10 kB"
+        }
+    ]
 }

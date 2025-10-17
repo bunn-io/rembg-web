@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rembg-web - Mask Only Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .image-container {
+        flex: 1;
+        text-align: center;
+      }
+      .image-container img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .controls {
+        margin: 20px 0;
+        text-align: center;
+      }
+      input[type='file'] {
+        margin: 10px;
+      }
+      button {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #218838;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .loading {
+        display: none;
+        color: #28a745;
+      }
+      .error {
+        display: none;
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>rembg-web - Mask Only Example</h1>
+    <p>
+      This example demonstrates how to get only the mask (black/white) from
+      background removal.
+    </p>
+
+    <div class="info">
+      <strong>Mask Only Mode:</strong> When <code>onlyMask: true</code> is set,
+      the function returns a grayscale image where white areas represent the
+      foreground (subject) and black areas represent the background.
+    </div>
+
+    <div class="controls">
+      <input type="file" id="fileInput" accept="image/*" />
+      <button id="processBtn">Generate Mask</button>
+      <div class="loading" id="loading">Generating mask...</div>
+      <div class="error" id="error"></div>
+    </div>
+
+    <div class="container">
+      <div class="image-container">
+        <h3>Original Image</h3>
+        <img
+          id="originalImg"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIGltYWdlIHNlbGVjdGVkPC90ZXh0Pjwvc3ZnPg=="
+          alt="No image selected"
+        />
+      </div>
+      <div class="image-container">
+        <h3>Generated Mask</h3>
+        <img
+          id="maskImg"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPldhaXRpbmcgZm9yIG1hc2suLi48L3RleHQ+PC9zdmc+"
+          alt="Waiting for mask generation"
+        />
+      </div>
+    </div>
+
+    <script type="module">
+      import { remove } from '../dist/index.js';
+
+      // Get DOM elements
+      const fileInput = document.getElementById('fileInput');
+      const processBtn = document.getElementById('processBtn');
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const originalImg = document.getElementById('originalImg');
+      const maskImg = document.getElementById('maskImg');
+
+      // Show/hide loading state
+      function setLoading(isLoading) {
+        loading.style.display = isLoading ? 'block' : 'none';
+        processBtn.disabled = isLoading;
+        processBtn.textContent = isLoading
+          ? 'Generating mask...'
+          : 'Generate Mask';
+      }
+
+      // Show error message
+      function showError(message) {
+        error.textContent = message;
+        error.style.display = 'block';
+      }
+
+      // Hide error message
+      function hideError() {
+        error.style.display = 'none';
+      }
+
+      // Process the image to generate mask
+      async function generateMask() {
+        const file = fileInput.files[0];
+        if (!file) {
+          showError('Please select an image file first.');
+          return;
+        }
+
+        try {
+          setLoading(true);
+          hideError();
+
+          // Show original image
+          const originalUrl = URL.createObjectURL(file);
+          originalImg.src = originalUrl;
+
+          // Process the image to get mask only
+          const maskBlob = await remove(file, {
+            onlyMask: true,
+            postProcessMask: true,
+          });
+
+          // Show mask
+          const maskUrl = URL.createObjectURL(maskBlob);
+          maskImg.src = maskUrl;
+
+          // Clean up original URL
+          URL.revokeObjectURL(originalUrl);
+        } catch (err) {
+          console.error('Error generating mask:', err);
+          showError(`Error: ${err.message}`);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      // Event listeners
+      processBtn.addEventListener('click', generateMask);
+
+      fileInput.addEventListener('change', e => {
+        if (e.target.files[0]) {
+          hideError();
+        }
+      });
+    </script>
+  </body>
+</html>

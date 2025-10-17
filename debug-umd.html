@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Debug UMD Build</title>
+  </head>
+  <body>
+    <h1>Debug UMD Build</h1>
+    <div id="output"></div>
+
+    <script>
+      function log(message) {
+        document.getElementById('output').innerHTML += '<p>' + message + '</p>';
+        console.log(message);
+      }
+
+      log('Before loading ONNX Runtime...');
+      log('typeof ort: ' + typeof ort);
+    </script>
+
+    <script src="https://unpkg.com/onnxruntime-web@latest/dist/ort.min.js"></script>
+
+    <script>
+      log('After loading ONNX Runtime...');
+      log('typeof ort: ' + typeof ort);
+      log('ort available: ' + (typeof ort !== 'undefined'));
+    </script>
+
+    <script src="./dist/index.umd.js"></script>
+
+    <script>
+      log('After loading UMD build...');
+      log('typeof RembgWeb: ' + typeof RembgWeb);
+      log('RembgWeb available: ' + (typeof RembgWeb !== 'undefined'));
+
+      if (typeof RembgWeb !== 'undefined') {
+        log('RembgWeb keys: ' + Object.keys(RembgWeb).join(', '));
+        log(
+          'remove function available: ' +
+            (typeof RembgWeb.remove === 'function')
+        );
+      }
+    </script>
+  </body>
+</html>

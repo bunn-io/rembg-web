@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rembg Web Test Page</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      .loading {
+        background-color: #e3f2fd;
+        color: #1976d2;
+      }
+      .error {
+        background-color: #ffebee;
+        color: #c62828;
+      }
+      .success {
+        background-color: #e8f5e8;
+        color: #2e7d32;
+      }
+      #testResults {
+        margin-top: 20px;
+      }
+      #imageResults {
+        margin-top: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .test-images {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Rembg Web Test Page</h1>
+      <div id="status" class="status loading">Loading library...</div>
+      <div id="testResults"></div>
+      <div id="imageResults"></div>
+      <div id="badResults">
+        <img src="/results/isnet-general-use.png" id="badOne" />
+        <img src="/test-image.jpg" id="badTwo" />
+      </div>
+    </div>
+
+    <script type="module" src="./test-page.ts"></script>
+  </body>
+</html>

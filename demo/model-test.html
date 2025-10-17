@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Model Testing - Rembg Web Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+      }
+
+      .controls {
+        padding: 30px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .model-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .model-selector label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      select {
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        min-width: 200px;
+        transition: all 0.3s ease;
+      }
+
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .run-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .run-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      .run-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 40px;
+        background: #f8f9fa;
+      }
+
+      .loading.active {
+        display: block;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e9ecef;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        font-size: 1.1rem;
+        color: #495057;
+        margin-bottom: 10px;
+      }
+
+      .progress-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+
+      .error {
+        display: none;
+        background: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+      }
+
+      .error.active {
+        display: block;
+      }
+
+      .results {
+        padding: 30px;
+        display: none;
+      }
+
+      .results.active {
+        display: block;
+      }
+
+      .model-title {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .test-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .test-row {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+      }
+
+      .test-row:not(:last-child) {
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 10px;
+      }
+
+      .test-image-name {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #495057;
+        text-transform: capitalize;
+      }
+
+      .image-comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .image-box {
+        text-align: center;
+      }
+
+      .image-box h4 {
+        margin-bottom: 15px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #495057;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .image-box img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .image-box img:hover {
+        transform: scale(1.02);
+      }
+
+      .original h4 {
+        color: #28a745;
+      }
+
+      .calculated h4 {
+        color: #007bff;
+      }
+
+      .expected h4 {
+        color: #6f42c1;
+      }
+
+      .navigation {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-link {
+        color: #667eea;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        .image-comparison {
+          grid-template-columns: 1fr;
+          gap: 15px;
+        }
+
+        .control-group {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .nav-links {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Model Testing</h1>
+        <p>Compare model outputs against expected results</p>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <div class="model-selector">
+            <label for="modelSelect">Select Model</label>
+            <select id="modelSelect">
+              <option value="u2net">U2Net</option>
+              <option value="u2netp">U2NetP</option>
+              <option value="u2net_human_seg">U2Net Human Segmentation</option>
+              <option value="u2net_cloth_seg">U2Net Cloth Segmentation</option>
+              <option value="isnet-general-use">ISNet General Use</option>
+              <option value="isnet-anime">ISNet Anime</option>
+              <option value="silueta">Silueta</option>
+            </select>
+          </div>
+          <button id="runTestBtn" class="run-btn">Run Test</button>
+        </div>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Processing images...</div>
+        <div class="progress-text" id="progressText">Initializing...</div>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="results" id="results">
+        <div class="model-title" id="modelTitle"></div>
+        <div class="test-grid" id="testGrid"></div>
+      </div>
+
+      <div class="navigation">
+        <a href="index.html" class="nav-link">← Back to Demo Navigation</a>
+      </div>
+    </div>
+
+    <script type="module" src="./model-test.ts"></script>
+  </body>
+</html>

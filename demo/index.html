@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rembg Web - Demo Navigation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        font-weight: 300;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      .content {
+        padding: 40px 30px;
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+      }
+
+      .demo-card {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 25px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .demo-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+      }
+
+      .demo-card h3 {
+        font-size: 1.4rem;
+        margin-bottom: 12px;
+        color: #2c3e50;
+        font-weight: 600;
+      }
+
+      .demo-card p {
+        color: #6c757d;
+        line-height: 1.5;
+        margin-bottom: 15px;
+      }
+
+      .demo-card .icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        display: block;
+      }
+
+      .demo-card .features {
+        font-size: 0.9rem;
+        color: #495057;
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 6px;
+        margin-top: 15px;
+      }
+
+      .info-section {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+      }
+
+      .info-section h3 {
+        color: #0066cc;
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
+
+      .info-section p {
+        color: #333;
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+
+      .info-section ul {
+        color: #333;
+        line-height: 1.6;
+        margin-left: 20px;
+      }
+
+      .info-section li {
+        margin-bottom: 5px;
+      }
+
+      .footer {
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        padding: 25px;
+        text-align: center;
+        color: #6c757d;
+      }
+
+      .footer a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 768px) {
+        .header h1 {
+          font-size: 2.2rem;
+        }
+
+        .header p {
+          font-size: 1rem;
+        }
+
+        .content {
+          padding: 30px 20px;
+        }
+
+        .demo-grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Rembg Web</h1>
+        <p>
+          AI-powered background removal library for web browsers. Explore our
+          comprehensive demo suite to see the capabilities and performance of
+          different models.
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="info-section">
+          <h3>About Rembg Web</h3>
+          <p>
+            Rembg Web is a powerful TypeScript library that brings AI-powered
+            background removal directly to web browsers. It supports multiple
+            models, hardware acceleration via WebNN, and provides a complete
+            toolkit for image processing.
+          </p>
+          <ul>
+            <li>
+              <strong>Multiple Models:</strong> U2Net, ISNet, Silueta, and more
+            </li>
+            <li>
+              <strong>Hardware Acceleration:</strong> WebNN, WebGL, and CPU
+              execution
+            </li>
+            <li>
+              <strong>Browser Compatible:</strong> Works in all modern browsers
+            </li>
+            <li>
+              <strong>TypeScript Support:</strong> Full type safety and
+              IntelliSense
+            </li>
+          </ul>
+        </div>
+
+        <div class="demo-grid">
+          <a href="basic-demo.html" class="demo-card">
+            <span class="icon">🎨</span>
+            <h3>Basic Demo</h3>
+            <p>
+              Simple background removal with drag-and-drop interface. Perfect
+              for getting started and testing basic functionality.
+            </p>
+            <div class="features">
+              • Drag & drop interface<br />
+              • Real-time preview<br />
+              • Download results
+            </div>
+          </a>
+
+          <a href="model-test.html" class="demo-card">
+            <span class="icon">🔬</span>
+            <h3>Model Testing</h3>
+            <p>
+              Compare different AI models side-by-side. Test how each model
+              performs on various image types.
+            </p>
+            <div class="features">
+              • Multiple model comparison<br />
+              • Side-by-side results<br />
+              • Performance metrics
+            </div>
+          </a>
+
+          <a href="all-models-test.html" class="demo-card">
+            <span class="icon">⚡</span>
+            <h3>All Models Test</h3>
+            <p>
+              Comprehensive testing across all available models. Batch process
+              images with every model for complete analysis.
+            </p>
+            <div class="features">
+              • All models tested<br />
+              • Batch processing<br />
+              • Results download
+            </div>
+          </a>
+
+          <a href="user-upload.html" class="demo-card">
+            <span class="icon">📤</span>
+            <h3>User Upload</h3>
+            <p>
+              Upload your own images and test them with different models.
+              Perfect for testing with your specific use cases.
+            </p>
+            <div class="features">
+              • Custom image upload<br />
+              • Multiple model options<br />
+              • High-quality output
+            </div>
+          </a>
+
+          <a href="webnn-acceleration.html" class="demo-card">
+            <span class="icon">🚀</span>
+            <h3>WebNN Acceleration</h3>
+            <p>
+              Hardware-accelerated processing using WebNN API. Experience the
+              fastest possible background removal.
+            </p>
+            <div class="features">
+              • WebNN acceleration<br />
+              • GPU/CPU/NPU support<br />
+              • Performance comparison
+            </div>
+          </a>
+
+          <a href="benchmark.html" class="demo-card">
+            <span class="icon">📊</span>
+            <h3>Performance Benchmark</h3>
+            <p>
+              Comprehensive performance testing and benchmarking. Measure
+              execution times, compare acceleration methods, and analyze
+              results.
+            </p>
+            <div class="features">
+              • Detailed benchmarking<br />
+              • Statistical analysis<br />
+              • Results export
+            </div>
+          </a>
+
+          <a href="custom-model.html" class="demo-card">
+            <span class="icon">🔧</span>
+            <h3>Custom Model</h3>
+            <p>
+              Use your own U2Net-compatible ONNX model for background removal.
+              Supports both WebNN and WebGPU acceleration.
+            </p>
+            <div class="features">
+              • Custom ONNX models<br />
+              • WebNN & WebGPU support<br />
+              • Flexible configuration
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          Built with ❤️ using TypeScript, ONNX Runtime, and modern web
+          technologies.
+          <br />
+          <a href="https://github.com/your-repo/rembg-web" target="_blank"
+            >View on GitHub</a
+          >
+          |
+          <a href="https://npmjs.com/package/rembg-web" target="_blank"
+            >NPM Package</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

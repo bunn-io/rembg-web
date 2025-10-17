@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basic Usage - rembg-web CDN Example</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        line-height: 1.6;
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .upload-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: #f9f9f9;
+        transition: all 0.3s ease;
+      }
+
+      .upload-area.dragover {
+        border-color: #007bff;
+        background: #e3f2fd;
+      }
+
+      .result-area {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fff;
+      }
+
+      .image-container {
+        max-width: 100%;
+        margin: 1rem 0;
+      }
+
+      .image-container img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .controls {
+        margin: 1rem 0;
+      }
+
+      .btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin: 0.5rem;
+      }
+
+      .btn:hover {
+        background: #0056b3;
+      }
+
+      .btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .progress {
+        width: 100%;
+        height: 20px;
+        background: #f0f0f0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 1rem 0;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: #007bff;
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      .status {
+        margin: 1rem 0;
+        padding: 0.5rem;
+        border-radius: 4px;
+      }
+
+      .status.info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .model-selector {
+        margin: 1rem 0;
+      }
+
+      .model-selector select {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+
+      .note {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎨 rembg-web - Basic Usage (CDN)</h1>
+    <p>
+      This example demonstrates basic background removal using rembg-web loaded
+      from CDN. No installation required!
+    </p>
+
+    <div class="note">
+      <strong>Note:</strong> This example uses the CDN version of rembg-web. The
+      models are loaded from GitHub Releases. Make sure you have a stable
+      internet connection for the initial model download.
+    </div>
+
+    <div class="model-selector">
+      <label for="modelSelect">Choose Model:</label>
+      <select id="modelSelect">
+        <option value="u2net">u2net (General Purpose)</option>
+        <option value="u2netp">u2netp (Lightweight)</option>
+        <option value="u2net_human_seg">
+          u2net_human_seg (Human Subjects)
+        </option>
+        <option value="u2net_cloth_seg">u2net_cloth_seg (Clothing)</option>
+        <option value="isnet-general-use">
+          isnet-general-use (High Accuracy)
+        </option>
+        <option value="isnet-anime">isnet-anime (Anime Style)</option>
+        <option value="silueta">silueta (Silhouette)</option>
+      </select>
+    </div>
+
+    <div class="container">
+      <div class="upload-area" id="uploadArea">
+        <h3>📁 Upload Image</h3>
+        <p>Drag and drop an image here or click to select</p>
+        <input
+          type="file"
+          id="fileInput"
+          accept="image/*"
+          style="display: none"
+        />
+        <button
+          class="btn"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          Choose File
+        </button>
+      </div>
+
+      <div class="result-area">
+        <h3>✨ Result</h3>
+        <div id="resultContainer">
+          <p>Upload an image to see the result</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="processBtn" disabled>Process Image</button>
+      <button class="btn" id="downloadBtn" disabled>Download Result</button>
+      <button class="btn" id="clearBtn">Clear</button>
+    </div>
+
+    <div class="progress" id="progressContainer" style="display: none">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="status"></div>
+
+    <script type="module">
+      // Import rembg-web from CDN
+      import {
+        remove,
+        newSession,
+      } from 'https://unpkg.com/@bunnio/rembg-web@latest/dist/index.js';
+
+      // Global variables
+      let selectedFile = null;
+      let currentResult = null;
+      let currentSession = null;
+
+      // DOM elements
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('fileInput');
+      const modelSelect = document.getElementById('modelSelect');
+      const processBtn = document.getElementById('processBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const resultContainer = document.getElementById('resultContainer');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const status = document.getElementById('status');
+
+      // File input handling
+      fileInput.addEventListener('change', handleFileSelect);
+
+      // Drag and drop handling
+      uploadArea.addEventListener('dragover', e => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      });
+
+      // Click to upload
+      uploadArea.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      // Button event listeners
+      processBtn.addEventListener('click', processImage);
+      downloadBtn.addEventListener('click', downloadResult);
+      clearBtn.addEventListener('click', clearAll);
+
+      // Model selection
+      modelSelect.addEventListener('change', () => {
+        currentSession = null; // Reset session when model changes
+      });
+
+      function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+          handleFile(file);
+        }
+      }
+
+      function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+          showStatus('Please select an image file.', 'error');
+          return;
+        }
+
+        selectedFile = file;
+        displayPreview(file);
+        processBtn.disabled = false;
+        showStatus(
+          `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`,
+          'info'
+        );
+      }
+
+      function displayPreview(file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          resultContainer.innerHTML = `
+                    <h4>Original Image</h4>
+                    <div class="image-container">
+                        <img src="${e.target.result}" alt="Original">
+                    </div>
+                `;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      async function processImage() {
+        if (!selectedFile) return;
+
+        try {
+          processBtn.disabled = true;
+          processBtn.textContent = 'Processing...';
+          progressContainer.style.display = 'block';
+          showStatus('Starting background removal...', 'info');
+
+          // Create session if not exists or model changed
+          if (!currentSession) {
+            const modelName = modelSelect.value;
+            showStatus(`Loading ${modelName} model...`, 'info');
+            currentSession = newSession(modelName);
+          }
+
+          // Process the image
+          const result = await remove(selectedFile, {
+            session: currentSession,
+            onProgress: info => {
+              progressBar.style.width = `${info.progress}%`;
+              showStatus(
+                `${info.step}: ${info.progress}% - ${info.message}`,
+                'info'
+              );
+            },
+          });
+
+          currentResult = result;
+          displayResult(result);
+          downloadBtn.disabled = false;
+          showStatus('Background removal completed successfully!', 'success');
+        } catch (error) {
+          console.error('Processing error:', error);
+          showStatus(`Error: ${error.message}`, 'error');
+        } finally {
+          processBtn.disabled = false;
+          processBtn.textContent = 'Process Image';
+          progressContainer.style.display = 'none';
+          progressBar.style.width = '0%';
+        }
+      }
+
+      function displayResult(blob) {
+        const url = URL.createObjectURL(blob);
+        resultContainer.innerHTML = `
+                <h4>Result</h4>
+                <div class="image-container">
+                    <img src="${url}" alt="Processed result">
+                </div>
+            `;
+      }
+
+      function downloadResult() {
+        if (!currentResult) return;
+
+        const url = URL.createObjectURL(currentResult);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rembg-${selectedFile.name.replace(/\.[^/.]+$/, '')}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function clearAll() {
+        selectedFile = null;
+        currentResult = null;
+        currentSession = null;
+
+        fileInput.value = '';
+        resultContainer.innerHTML = '<p>Upload an image to see the result</p>';
+        processBtn.disabled = true;
+        downloadBtn.disabled = true;
+        progressContainer.style.display = 'none';
+        progressBar.style.width = '0%';
+        showStatus('', '');
+      }
+
+      function showStatus(message, type) {
+        status.textContent = message;
+        status.className = `status ${type}`;
+        status.style.display = message ? 'block' : 'none';
+      }
+    </script>
+  </body>
+</html>

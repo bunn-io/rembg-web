@@ -1,0 +1,26 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+      "outDir": "../dist-test",
+      "rootDir": "../",
+      "noEmit": false,
+      "types": ["node", "@playwright/test"],
+      "target": "es2020",
+      "module": "esnext",
+      "lib": ["es2020", "DOM", "DOM.Iterable"],
+      "baseUrl": ".",
+      "paths": {
+        "rembg-web": ["../src/index.ts"],
+        "rembg-web/*": ["../src/*"]
+      }
+    },
+    "include": [
+      "**/*.ts",
+      "../src/**/*"
+    ],
+    "exclude": [
+      "node_modules",
+      "dist",
+      "dist-test"
+    ]
+  }

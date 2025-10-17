@@ -1,0 +1,63 @@
+# Source files
+src/
+scripts/
+*.ts
+*.tsx
+tsconfig.json
+typedoc.json
+
+# Test files
+tests/
+test-results/
+playwright-report/
+playwright.config.ts
+vitest.config.ts
+e2e.server.config.js
+vite.config.js
+
+# Demo and examples
+demo/
+examples/
+docs-site/
+
+# Development files
+.github/
+.cursorrules
+*.log
+*.tgz
+*.tar.gz
+
+# Public folder (test fixtures and models)
+public/
+
+# Development dependencies
+node_modules/
+yarn.lock
+package-lock.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build artifacts (keep dist/)
+*.map
+*.d.ts.map
+
+# Documentation (keep README.md and LICENSE)
+docs/
+CHANGELOG.md
+RELEASE.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md

@@ -1,0 +1,65 @@
+# Cursor Rules for rembg-web
+
+## Git Commit and Changelog Management
+
+### Branch Naming Convention
+
+- For GitHub Issue-driven changes: Use format `GH-{issue_number}/{description}`
+- Example: `GH-123/fix-background-removal-bug`
+
+### Commit Message Convention
+
+- If the branch is not github related, just to normal commit mesage
+- For GitHub Issue-driven changes: Use format `GH-{issue_number}/ {commit message}`
+- Example: `GH-123/ Fix background removal edge case with transparent images`
+
+### Changelog Updates
+
+- ALWAYS append new changelog entries to the TOP of CHANGELOG.md
+- For GitHub Issue-driven changes: Use format `GH-{issue_number}: {change description}`
+- Example: `GH-123: Fixed background removal edge case with transparent images`
+- Include the date in format `[YYYY-MM-DD]`
+- Group changes under appropriate sections (Added, Changed, Deprecated, Removed, Fixed, Security)
+
+### Changelog Entry Format
+
+When making commits, automatically add entries to CHANGELOG.md in this format:
+
+```markdown
+## [Unreleased] - YYYY-MM-DD
+
+### Fixed
+
+- GH-123: Fixed background removal edge case with transparent images
+
+### Added
+
+- GH-124: Added support for WebP image format
+
+### Changed
+
+- GH-125: Improved error handling for large image files
+```
+
+### Automatic Changelog Updates
+
+- Before every commit, check if the commit message follows the GH-{number} format
+- If it does, automatically prepend a changelog entry to the top of CHANGELOG.md
+- Extract the issue number and commit message to create the changelog entry
+- If no GH-{number} format is detected, still add a changelog entry but without the GH prefix
+
+### File Structure
+
+- Keep CHANGELOG.md at the project root
+- Always maintain the Keep a Changelog format
+- Ensure entries are added to the top, right after the `## [Unreleased]` section
+
+### AI Assistant Instructions
+
+When the user makes a commit:
+
+1. Parse the commit message for GH-{number} pattern
+2. Extract issue number and description
+3. Determine the change type (Added, Changed, Deprecated, Removed, Fixed, Security)
+4. Add appropriate entry to the top of CHANGELOG.md
+5. Maintain proper formatting and structure

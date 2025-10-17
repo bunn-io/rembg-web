@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebNN Acceleration - Rembg Web Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+      }
+
+      .info-panel {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px;
+      }
+
+      .info-panel h3 {
+        margin: 0 0 15px 0;
+        color: #0066cc;
+        font-size: 1.2rem;
+      }
+
+      .info-panel p {
+        margin: 8px 0;
+        color: #333;
+        line-height: 1.5;
+      }
+
+      .controls {
+        padding: 30px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .control-group {
+        margin-bottom: 20px;
+      }
+
+      .control-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .control-group select,
+      .control-group input[type='file'] {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        transition: all 0.3s ease;
+      }
+
+      .control-group select:focus,
+      .control-group input[type='file']:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .checkbox-group input[type='checkbox'] {
+        width: auto;
+        margin: 0;
+      }
+
+      .checkbox-group label {
+        margin: 0;
+        text-transform: none;
+        letter-spacing: normal;
+        font-weight: 500;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex: 1;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      }
+
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .status {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin: 20px;
+        border: 1px solid #e9ecef;
+      }
+
+      .status h3 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      .status-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 10px 0;
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .status-item:last-child {
+        border-bottom: none;
+      }
+
+      .status-label {
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .status-value {
+        color: #333;
+        font-weight: 500;
+      }
+
+      .status-value.available {
+        color: #28a745;
+        font-weight: 600;
+      }
+
+      .status-value.unavailable {
+        color: #dc3545;
+        font-weight: 600;
+      }
+
+      .image-container {
+        display: flex;
+        gap: 20px;
+        margin: 20px;
+        flex-wrap: wrap;
+      }
+
+      .image-box {
+        flex: 1;
+        min-width: 300px;
+        text-align: center;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+      }
+
+      .image-box h3 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .image-box img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .image-box img:hover {
+        transform: scale(1.02);
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 40px;
+        background: #f8f9fa;
+        margin: 20px;
+        border-radius: 12px;
+      }
+
+      .loading.active {
+        display: block;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e9ecef;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        font-size: 1.1rem;
+        color: #495057;
+        margin-bottom: 10px;
+      }
+
+      .progress-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+
+      .error {
+        display: none;
+        background: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+      }
+
+      .error.active {
+        display: block;
+      }
+
+      .performance-info {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px;
+      }
+
+      .performance-info h4 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .performance-metric {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 8px 0;
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .performance-metric:last-child {
+        border-bottom: none;
+      }
+
+      .performance-metric .label {
+        font-weight: 600;
+        color: #6c757d;
+      }
+
+      .performance-metric .value {
+        color: #495057;
+        font-weight: 500;
+      }
+
+      .comparison-results {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px;
+      }
+
+      .comparison-results h4 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .comparison-summary {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        color: #0066cc;
+      }
+
+      .comparison-table {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .comparison-header {
+        font-weight: 600;
+        color: #495057;
+        padding: 10px;
+        background: #e9ecef;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      .comparison-row {
+        display: contents;
+      }
+
+      .comparison-provider {
+        font-weight: 500;
+        color: #495057;
+        padding: 10px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+      }
+
+      .comparison-time {
+        font-weight: 500;
+        color: #495057;
+        padding: 10px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+        text-align: center;
+      }
+
+      .comparison-status {
+        font-weight: 500;
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      .comparison-status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .comparison-status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .comparison-best {
+        background: #d1ecf1 !important;
+        border-color: #bee5eb !important;
+        color: #0c5460 !important;
+        font-weight: 600 !important;
+      }
+
+      .navigation {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .nav-link {
+        color: #667eea;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        .image-container {
+          flex-direction: column;
+        }
+
+        .button-group {
+          flex-direction: column;
+        }
+
+        .nav-links {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>WebNN & WebGPU Acceleration</h1>
+        <p>
+          Hardware-accelerated background removal using WebNN and WebGPU APIs
+        </p>
+      </div>
+
+      <div class="info-panel">
+        <h3>About WebNN & WebGPU</h3>
+        <p>
+          <strong>WebNN</strong> provides hardware-accelerated neural network
+          inference using native platform capabilities (NPU, GPU, CPU
+          optimizations).
+        </p>
+        <p>
+          <strong>WebGPU</strong> provides low-level GPU compute access for
+          high-performance machine learning workloads.
+        </p>
+        <p>
+          <strong>Browser Support:</strong> WebNN: Chrome 119+, Edge 119+
+          (experimental). WebGPU: Chrome 113+, Edge 113+, Firefox (behind flag),
+          Safari Technology Preview.
+        </p>
+        <p>
+          <strong>Fallback:</strong> If WebNN/WebGPU are not available, the
+          system automatically falls back to WebGL or CPU execution.
+        </p>
+      </div>
+
+      <div class="status" id="statusPanel">
+        <h3>Acceleration Support Status</h3>
+        <div id="statusContent">
+          <div class="status-item">
+            <span class="status-label">WebNN API:</span>
+            <span class="status-value" id="webnnStatus">Checking...</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">WebGPU API:</span>
+            <span class="status-value" id="webgpuStatus">Checking...</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Supported Devices:</span>
+            <span class="status-value" id="supportedDevices">Checking...</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Browser:</span>
+            <span class="status-value" id="browserInfo">Checking...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <label for="fileInput">Select Image:</label>
+          <input type="file" id="fileInput" accept="image/*" />
+        </div>
+
+        <div class="control-group">
+          <label for="modelSelect">Model:</label>
+          <select id="modelSelect">
+            <option value="u2net">U2Net (General Purpose)</option>
+            <option value="u2netp">U2NetP (Lightweight)</option>
+            <option value="u2net_human_seg">U2Net Human Segmentation</option>
+            <option value="u2net_cloth_seg">U2Net Cloth Segmentation</option>
+            <option value="isnet-general-use">ISNet General Use</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="enableWebNN" />
+            <label for="enableWebNN">Enable WebNN Acceleration</label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="onnxProfiling" />
+            <label for="onnxProfiling">ONNX Profiling</label>
+          </div>
+        </div>
+
+        <div class="control-group" id="webnnOptions" style="display: none">
+          <label for="deviceType">WebNN Device Type:</label>
+          <select id="deviceType">
+            <option value="gpu">GPU (Recommended)</option>
+            <option value="cpu">CPU</option>
+            <option value="npu">NPU (Neural Processing Unit)</option>
+          </select>
+        </div>
+
+        <div class="control-group" id="webnnPowerOptions" style="display: none">
+          <label for="powerPreference">WebNN Power Preference:</label>
+          <select id="powerPreference">
+            <option value="default">Default</option>
+            <option value="low-power">Low Power</option>
+            <option value="high-performance">High Performance</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="enableWebGPU" disabled />
+            <label for="enableWebGPU"
+              >Enable WebGPU Acceleration (Disabled, as every model fails to run
+              on WebGPU)</label
+            >
+          </div>
+        </div>
+
+        <div class="control-group" id="webgpuOptions" style="display: none">
+          <label for="gpuPowerPreference">WebGPU Power Preference:</label>
+          <select id="gpuPowerPreference">
+            <option value="default">Default</option>
+            <option value="low-power">Low Power</option>
+            <option value="high-performance">High Performance</option>
+          </select>
+        </div>
+
+        <div class="button-group">
+          <button id="processBtn">Process Image</button>
+          <button id="benchmarkBtn">Compare</button>
+        </div>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Processing image...</div>
+        <div class="progress-text" id="progressText">Initializing...</div>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="image-container">
+        <div class="image-box">
+          <h3>Original Image</h3>
+          <img
+            id="originalImg"
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIGltYWdlIHNlbGVjdGVkPC90ZXh0Pjwvc3ZnPg=="
+            alt="No image selected"
+          />
+        </div>
+        <div class="image-box">
+          <h3>Processed Image</h3>
+          <img
+            id="processedImg"
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPldhaXRpbmcgZm9yIHByb2Nlc3NpbmcuLi48L3RleHQ+PC9zdmc+"
+            alt="Waiting for processing"
+          />
+        </div>
+      </div>
+
+      <div class="performance-info" id="performanceInfo" style="display: none">
+        <h4>Performance Metrics</h4>
+        <div class="performance-metric">
+          <span class="label">Execution Provider:</span>
+          <span class="value" id="executionProvider">-</span>
+        </div>
+        <div class="performance-metric">
+          <span class="label">Processing Time:</span>
+          <span class="value" id="processingTime">-</span>
+        </div>
+        <div class="performance-metric">
+          <span class="label">Model Loading Time:</span>
+          <span class="value" id="modelLoadingTime">-</span>
+        </div>
+        <div class="performance-metric">
+          <span class="label">Inference Time:</span>
+          <span class="value" id="inferenceTime">-</span>
+        </div>
+      </div>
+
+      <div
+        class="comparison-results"
+        id="comparisonResults"
+        style="display: none"
+      >
+        <h4>Comparison Results</h4>
+        <div class="comparison-summary" id="comparisonSummary"></div>
+        <div class="comparison-table" id="comparisonTable"></div>
+      </div>
+
+      <div class="navigation">
+        <a href="index.html" class="nav-link">← Back to Demo Navigation</a>
+      </div>
+    </div>
+
+    <script type="module" src="./webnn-acceleration.ts"></script>
+  </body>
+</html>

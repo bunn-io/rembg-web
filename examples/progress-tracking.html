@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rembg-web - Progress Tracking Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .image-container {
+        flex: 1;
+        text-align: center;
+      }
+      .image-container img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .controls {
+        margin: 20px 0;
+        text-align: center;
+      }
+      input[type='file'] {
+        margin: 10px;
+      }
+      button {
+        background: #fd7e14;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #e8650e;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .progress-container {
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #fd7e14, #ffc107);
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 10px;
+      }
+      .progress-text {
+        text-align: center;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .progress-details {
+        font-size: 14px;
+        color: #6c757d;
+        margin: 5px 0;
+      }
+      .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+      }
+      .step {
+        flex: 1;
+        text-align: center;
+        padding: 8px;
+        margin: 0 2px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
+      .step.active {
+        background: #fd7e14;
+        color: white;
+      }
+      .step.completed {
+        background: #28a745;
+        color: white;
+      }
+      .step.pending {
+        background: #e9ecef;
+        color: #6c757d;
+      }
+      .error {
+        display: none;
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 10px 0;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>rembg-web - Progress Tracking Example</h1>
+    <p>
+      This example demonstrates how to track progress during background removal
+      processing.
+    </p>
+
+    <div class="info">
+      <strong>Progress Tracking:</strong> The <code>onProgress</code> callback
+      provides real-time updates about the processing status, including download
+      progress, model initialization, and processing steps.
+    </div>
+
+    <div class="controls">
+      <input type="file" id="fileInput" accept="image/*" />
+      <button id="processBtn">Process with Progress</button>
+      <div class="error" id="error"></div>
+    </div>
+
+    <div class="progress-container">
+      <h4>Processing Progress</h4>
+      <div class="step-indicator">
+        <div class="step pending" id="step-downloading">Downloading</div>
+        <div class="step pending" id="step-processing">Processing</div>
+        <div class="step pending" id="step-postprocessing">Post-Processing</div>
+        <div class="step pending" id="step-complete">Complete</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">Ready to process</div>
+      <div class="progress-details" id="progressDetails"></div>
+    </div>
+
+    <div class="container">
+      <div class="image-container">
+        <h3>Original Image</h3>
+        <img
+          id="originalImg"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIGltYWdlIHNlbGVjdGVkPC90ZXh0Pjwvc3ZnPg=="
+          alt="No image selected"
+        />
+      </div>
+      <div class="image-container">
+        <h3>Processed Image</h3>
+        <img
+          id="processedImg"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPldhaXRpbmcgZm9yIHByb2Nlc3NpbmcuLi48L3RleHQ+PC9zdmc+"
+          alt="Waiting for processing"
+        />
+      </div>
+    </div>
+
+    <div class="log" id="progressLog">
+      <div>Ready to process images...</div>
+    </div>
+
+    <script type="module">
+      import { remove } from '../dist/index.js';
+
+      // Get DOM elements
+      const fileInput = document.getElementById('fileInput');
+      const processBtn = document.getElementById('processBtn');
+      const error = document.getElementById('error');
+      const originalImg = document.getElementById('originalImg');
+      const processedImg = document.getElementById('processedImg');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      const progressDetails = document.getElementById('progressDetails');
+      const progressLog = document.getElementById('progressLog');
+
+      // Step elements
+      const steps = {
+        downloading: document.getElementById('step-downloading'),
+        processing: document.getElementById('step-processing'),
+        postprocessing: document.getElementById('step-postprocessing'),
+        complete: document.getElementById('step-complete'),
+      };
+
+      // Reset progress UI
+      function resetProgress() {
+        progressFill.style.width = '0%';
+        progressText.textContent = 'Ready to process';
+        progressDetails.textContent = '';
+
+        Object.values(steps).forEach(step => {
+          step.className = 'step pending';
+        });
+      }
+
+      // Update progress UI
+      function updateProgress(step, progress, message) {
+        // Update progress bar
+        progressFill.style.width = `${progress}%`;
+        progressText.textContent = message;
+        progressDetails.textContent = `Step: ${step} | Progress: ${progress}%`;
+
+        // Update step indicators
+        const stepOrder = [
+          'downloading',
+          'processing',
+          'postprocessing',
+          'complete',
+        ];
+        const currentStepIndex = stepOrder.indexOf(step);
+
+        stepOrder.forEach((stepName, index) => {
+          const stepElement = steps[stepName];
+          if (index < currentStepIndex) {
+            stepElement.className = 'step completed';
+          } else if (index === currentStepIndex) {
+            stepElement.className = 'step active';
+          } else {
+            stepElement.className = 'step pending';
+          }
+        });
+
+        // Add to log
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.textContent = `[${timestamp}] ${step}: ${progress}% - ${message}`;
+        progressLog.appendChild(logEntry);
+        progressLog.scrollTop = progressLog.scrollHeight;
+      }
+
+      // Show error message
+      function showError(message) {
+        error.textContent = message;
+        error.style.display = 'block';
+      }
+
+      // Hide error message
+      function hideError() {
+        error.style.display = 'none';
+      }
+
+      // Process the image with progress tracking
+      async function processImage() {
+        const file = fileInput.files[0];
+        if (!file) {
+          showError('Please select an image file first.');
+          return;
+        }
+
+        try {
+          processBtn.disabled = true;
+          hideError();
+          resetProgress();
+
+          // Show original image
+          const originalUrl = URL.createObjectURL(file);
+          originalImg.src = originalUrl;
+
+          // Process the image with progress callback
+          const processedBlob = await remove(file, {
+            postProcessMask: true,
+            onProgress: info => {
+              updateProgress(info.step, info.progress, info.message);
+            },
+          });
+
+          // Show processed image
+          const processedUrl = URL.createObjectURL(processedBlob);
+          processedImg.src = processedUrl;
+
+          // Clean up original URL
+          URL.revokeObjectURL(originalUrl);
+        } catch (err) {
+          console.error('Error processing image:', err);
+          showError(`Error: ${err.message}`);
+        } finally {
+          processBtn.disabled = false;
+        }
+      }
+
+      // Event listeners
+      processBtn.addEventListener('click', processImage);
+
+      fileInput.addEventListener('change', e => {
+        if (e.target.files[0]) {
+          hideError();
+          resetProgress();
+        }
+      });
+    </script>
+  </body>
+</html>

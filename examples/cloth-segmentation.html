@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>U2Net Cloth Segmentation Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+      .input-section,
+      .output-section {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+      }
+      .controls {
+        margin: 15px 0;
+      }
+      .controls label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .controls select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .controls button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      .controls button:hover {
+        background: #0056b3;
+      }
+      .controls button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .image-container {
+        text-align: center;
+        margin: 10px 0;
+      }
+      .image-container img,
+      .image-container canvas {
+        max-width: 100%;
+        max-height: 300px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 15px;
+      }
+      .comparison-item {
+        text-align: center;
+        border: 1px solid #eee;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .comparison-item h4 {
+        margin: 0 0 10px 0;
+        color: #333;
+      }
+      .progress {
+        margin: 10px 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        display: none;
+      }
+      .progress.show {
+        display: block;
+      }
+      .error {
+        color: #dc3545;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>U2Net Cloth Segmentation Example</h1>
+    <p>
+      This example demonstrates the multi-mask output of the U2Net Cloth
+      Segmentation model. The model can identify and separate different clothing
+      categories: upper body, lower body, and full body clothing.
+    </p>
+
+    <div class="container">
+      <div class="input-section">
+        <h3>Input</h3>
+        <div class="controls">
+          <label for="fileInput">Select an image:</label>
+          <input type="file" id="fileInput" accept="image/*" />
+        </div>
+        <div class="controls">
+          <label for="categorySelect">Cloth Category Filter:</label>
+          <select id="categorySelect">
+            <option value="all">All Categories (3 masks)</option>
+            <option value="combined">Combined View (1 mask)</option>
+            <option value="upper">Upper Body Only</option>
+            <option value="lower">Lower Body Only</option>
+            <option value="full">Full Body Only</option>
+          </select>
+        </div>
+        <div class="controls">
+          <button id="processBtn" disabled>Process Image</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+        <div class="image-container">
+          <img id="inputImage" style="display: none" alt="Input image" />
+        </div>
+      </div>
+
+      <div class="output-section">
+        <h3>Output</h3>
+        <div class="progress" id="progress">
+          <div id="progressText">Processing...</div>
+        </div>
+        <div id="error" class="error" style="display: none"></div>
+        <div id="outputContainer">
+          <p>
+            Select an image and click "Process Image" to see the cloth
+            segmentation results. The output will show the original image
+            compared to a composite image with all clothing masks applied.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { U2NetClothSegSession } from '../dist/index.js';
+
+      const fileInput = document.getElementById('fileInput');
+      const categorySelect = document.getElementById('categorySelect');
+      const processBtn = document.getElementById('processBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const inputImage = document.getElementById('inputImage');
+      const outputContainer = document.getElementById('outputContainer');
+      const progress = document.getElementById('progress');
+      const progressText = document.getElementById('progressText');
+      const errorDiv = document.getElementById('error');
+
+      let session = null;
+      let currentImage = null;
+
+      // Initialize session
+      async function initializeSession() {
+        try {
+          session = new U2NetClothSegSession();
+          console.log('Session initialized');
+        } catch (err) {
+          showError('Failed to initialize session: ' + err.message);
+        }
+      }
+
+      // Show error message
+      function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        progress.classList.remove('show');
+      }
+
+      // Hide error message
+      function hideError() {
+        errorDiv.style.display = 'none';
+      }
+
+      // Show progress
+      function showProgress(message) {
+        progressText.textContent = message;
+        progress.classList.add('show');
+      }
+
+      // Hide progress
+      function hideProgress() {
+        progress.classList.remove('show');
+      }
+
+      // Handle file selection
+      fileInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = e => {
+            inputImage.src = e.target.result;
+            inputImage.style.display = 'block';
+            currentImage = inputImage;
+            processBtn.disabled = false;
+            hideError();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Process image
+      processBtn.addEventListener('click', async () => {
+        if (!session || !currentImage) return;
+
+        try {
+          hideError();
+          showProgress('Processing image...');
+
+          // Set cloth category filter
+          const category = categorySelect.value;
+          session.setClothCategory(category);
+          console.log('Set cloth category to:', category);
+
+          // Convert image to canvas
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = currentImage.naturalWidth;
+          canvas.height = currentImage.naturalHeight;
+          ctx.drawImage(currentImage, 0, 0);
+
+          showProgress('Running AI model...');
+
+          // Get masks
+          const masks = await session.predict(canvas);
+          console.log(`Generated ${masks.length} mask(s)`);
+
+          showProgress('Creating composite image...');
+
+          // Display results
+          displayResults(masks, category, canvas);
+
+          hideProgress();
+        } catch (err) {
+          console.error('Processing error:', err);
+          showError('Processing failed: ' + err.message);
+        }
+      });
+
+      // Create composite image with masks applied
+      function createCompositeImage(originalCanvas, masks) {
+        const categories = ['Upper Body', 'Lower Body', 'Full Body'];
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1']; // Red, Teal, Blue
+
+        // Create composite canvas - 3x height to stack the masks
+        const compositeCanvas = document.createElement('canvas');
+        const compositeCtx = compositeCanvas.getContext('2d');
+        compositeCanvas.width = originalCanvas.width;
+        compositeCanvas.height = originalCanvas.height * 3;
+
+        // Fill with white background
+        compositeCtx.fillStyle = '#ffffff';
+        compositeCtx.fillRect(
+          0,
+          0,
+          compositeCanvas.width,
+          compositeCanvas.height
+        );
+
+        // Draw each mask section
+        masks.forEach((mask, index) => {
+          const yOffset = index * originalCanvas.height;
+
+          // Draw original image
+          compositeCtx.drawImage(originalCanvas, 0, yOffset);
+
+          // Apply mask with color overlay
+          compositeCtx.globalCompositeOperation = 'source-atop';
+          compositeCtx.fillStyle = colors[index];
+          compositeCtx.fillRect(
+            0,
+            yOffset,
+            originalCanvas.width,
+            originalCanvas.height
+          );
+
+          // Apply mask as alpha
+          compositeCtx.globalCompositeOperation = 'destination-in';
+          compositeCtx.drawImage(mask, 0, yOffset);
+
+          // Reset composite operation
+          compositeCtx.globalCompositeOperation = 'source-over';
+
+          // Add label
+          compositeCtx.fillStyle = '#000000';
+          compositeCtx.font = '16px Arial';
+          compositeCtx.fillText(categories[index], 10, yOffset + 25);
+        });
+
+        return compositeCanvas;
+      }
+
+      // Display results
+      function displayResults(masks, category, originalCanvas) {
+        outputContainer.innerHTML = '';
+
+        const comparisonGrid = document.createElement('div');
+        comparisonGrid.className = 'comparison-grid';
+
+        // Original image
+        const originalItem = document.createElement('div');
+        originalItem.className = 'comparison-item';
+        originalItem.innerHTML = `
+          <h4>Original Image</h4>
+          <canvas width="${originalCanvas.width}" height="${originalCanvas.height}"></canvas>
+        `;
+        const originalCanvasElement = originalItem.querySelector('canvas');
+        const originalCtx = originalCanvasElement.getContext('2d');
+        originalCtx.drawImage(originalCanvas, 0, 0);
+        comparisonGrid.appendChild(originalItem);
+
+        // Composite image with masks applied
+        const compositeItem = document.createElement('div');
+        compositeItem.className = 'comparison-item';
+
+        if (masks.length === 1) {
+          // Single mask - could be a specific category or combined view
+          const singleMaskCanvas = document.createElement('canvas');
+          const singleMaskCtx = singleMaskCanvas.getContext('2d');
+          singleMaskCanvas.width = originalCanvas.width;
+          singleMaskCanvas.height = originalCanvas.height;
+
+          // Draw original
+          singleMaskCtx.drawImage(originalCanvas, 0, 0);
+
+          // Apply mask with color
+          singleMaskCtx.globalCompositeOperation = 'source-atop';
+          if (category === 'combined') {
+            singleMaskCtx.fillStyle = '#9b59b6'; // Purple for combined view
+          } else {
+            singleMaskCtx.fillStyle = '#ff6b6b'; // Red for individual categories
+          }
+          singleMaskCtx.fillRect(
+            0,
+            0,
+            originalCanvas.width,
+            originalCanvas.height
+          );
+
+          singleMaskCtx.globalCompositeOperation = 'destination-in';
+          singleMaskCtx.drawImage(masks[0], 0, 0);
+
+          const title =
+            category === 'combined'
+              ? 'Combined Clothing Mask'
+              : `${category.charAt(0).toUpperCase() + category.slice(1)} Body Cloth`;
+
+          compositeItem.innerHTML = `
+            <h4>${title}</h4>
+            <canvas width="${singleMaskCanvas.width}" height="${singleMaskCanvas.height}"></canvas>
+          `;
+          const canvas = compositeItem.querySelector('canvas');
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(singleMaskCanvas, 0, 0);
+        } else {
+          // Multiple masks - create composite
+          const compositeCanvas = createCompositeImage(originalCanvas, masks);
+          compositeItem.innerHTML = `
+            <h4>All Clothing Segments</h4>
+            <canvas width="${compositeCanvas.width}" height="${compositeCanvas.height}"></canvas>
+          `;
+          const canvas = compositeItem.querySelector('canvas');
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(compositeCanvas, 0, 0);
+        }
+
+        comparisonGrid.appendChild(compositeItem);
+        outputContainer.appendChild(comparisonGrid);
+      }
+
+      // Clear results
+      clearBtn.addEventListener('click', () => {
+        fileInput.value = '';
+        inputImage.style.display = 'none';
+        currentImage = null;
+        processBtn.disabled = true;
+        outputContainer.innerHTML =
+          '<p>Select an image and click "Process Image" to see the cloth segmentation results. The output will show the original image compared to a composite image with all clothing masks applied.</p>';
+        hideError();
+        hideProgress();
+      });
+
+      // Initialize on page load
+      initializeSession();
+    </script>
+  </body>
+</html>

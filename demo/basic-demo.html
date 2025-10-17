@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basic Demo - Rembg Web</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 300;
+      }
+
+      .header p {
+        opacity: 0.9;
+        font-size: 1.1rem;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .drop-zone {
+        border: 3px dashed #667eea;
+        border-radius: 12px;
+        padding: 60px 20px;
+        text-align: center;
+        background: #f8f9ff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        margin-bottom: 30px;
+      }
+
+      .drop-zone:hover {
+        background: #e7f3ff;
+        border-color: #4c63d2;
+      }
+
+      .drop-zone.dragover {
+        background: #e7f3ff;
+        border-color: #4c63d2;
+        transform: scale(1.02);
+      }
+
+      .drop-zone .icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: #667eea;
+      }
+
+      .drop-zone h3 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        color: #2c3e50;
+      }
+
+      .drop-zone p {
+        color: #6c757d;
+        font-size: 1rem;
+      }
+
+      .image-container {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+      }
+
+      .image-box {
+        flex: 1;
+        min-width: 300px;
+        text-align: center;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+      }
+
+      .image-box h3 {
+        margin: 0 0 15px 0;
+        color: #495057;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .image-box img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .image-box img:hover {
+        transform: scale(1.02);
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 40px;
+        background: #f8f9fa;
+        margin: 20px 0;
+        border-radius: 12px;
+      }
+
+      .loading.active {
+        display: block;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e9ecef;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        font-size: 1.1rem;
+        color: #495057;
+        margin-bottom: 10px;
+      }
+
+      .progress-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+
+      .error {
+        display: none;
+        background: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        border: 1px solid #f5c6cb;
+      }
+
+      .error.active {
+        display: block;
+      }
+
+      .navigation {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+      }
+
+      .nav-link {
+        color: #667eea;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        display: inline-block;
+      }
+
+      .nav-link:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 768px) {
+        .image-container {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Basic Demo</h1>
+        <p>Simple background removal with drag-and-drop interface</p>
+      </div>
+
+      <div class="content">
+        <div class="drop-zone" id="dropZone">
+          <div class="icon">📁</div>
+          <h3>Drop an image here</h3>
+          <p>or click to select a file</p>
+        </div>
+
+        <div style="margin: 20px 0; text-align: center">
+          <label
+            style="
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 1rem;
+              color: #2c3e50;
+            "
+          >
+            <input type="checkbox" id="onnxProfiling" />
+            Enable ONNX Profiling
+          </label>
+        </div>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">Processing image...</div>
+          <div class="progress-text" id="progressText">Initializing...</div>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="image-container">
+          <div class="image-box">
+            <h3>Original Image</h3>
+            <img id="originalImg" alt="Original image" />
+          </div>
+          <div class="image-box">
+            <h3>Processed Image</h3>
+            <img id="processedImg" alt="Processed image" />
+          </div>
+        </div>
+      </div>
+
+      <div class="navigation">
+        <a href="index.html" class="nav-link">← Back to Demo Navigation</a>
+      </div>
+    </div>
+
+    <script type="module" src="./basic-demo.ts"></script>
+  </body>
+</html>

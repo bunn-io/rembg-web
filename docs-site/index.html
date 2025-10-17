@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@bunnio/rembg-web - AI-Powered Background Removal for the Web</title>
+    <meta
+      name="description"
+      content="A web-based background removal library powered by AI models. TypeScript/JavaScript port of rembg designed to run directly in browsers using ONNX Runtime Web."
+    />
+    <meta
+      name="keywords"
+      content="background removal, image processing, AI, machine learning, browser, web, TypeScript, JavaScript, ONNX"
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://boldizsar-pal.github.io/rembg-web/"
+    />
+    <meta
+      property="og:title"
+      content="@bunnio/rembg-web - AI-Powered Background Removal"
+    />
+    <meta
+      property="og:description"
+      content="Remove backgrounds from images directly in the browser using AI models. No server required."
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta
+      property="twitter:url"
+      content="https://boldizsar-pal.github.io/rembg-web/"
+    />
+    <meta
+      property="twitter:title"
+      content="@bunnio/rembg-web - AI-Powered Background Removal"
+    />
+    <meta
+      property="twitter:description"
+      content="Remove backgrounds from images directly in the browser using AI models. No server required."
+    />
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>"
+    />
+  </head>
+  <body>
+    <header class="header">
+      <nav class="nav">
+        <div class="nav-brand">
+          <h1>@bunnio/rembg-web</h1>
+          <span class="version">v1.0.0</span>
+        </div>
+        <ul class="nav-links">
+          <li><a href="#getting-started">Getting Started</a></li>
+          <li><a href="api/index.html">API Reference</a></li>
+          <li><a href="examples/">Examples</a></li>
+          <li><a href="guides/">Guides</a></li>
+          <li>
+            <a
+              href="https://github.com/boldizsar-pal/rembg-web"
+              target="_blank"
+              rel="noopener"
+              >GitHub</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="main">
+      <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-title">AI-Powered Background Removal for the Web</h1>
+          <p class="hero-description">
+            Remove backgrounds from images directly in the browser using
+            state-of-the-art AI models. No server required - everything runs
+            client-side with WebAssembly.
+          </p>
+          <div class="hero-badges">
+            <a
+              href="https://www.npmjs.com/package/@bunnio/rembg-web"
+              class="badge"
+            >
+              <img
+                src="https://img.shields.io/npm/v/@bunnio/rembg-web?style=flat-square"
+                alt="npm version"
+              />
+            </a>
+            <a href="https://github.com/boldizsar-pal/rembg-web" class="badge">
+              <img
+                src="https://img.shields.io/github/stars/boldizsar-pal/rembg-web?style=flat-square"
+                alt="GitHub stars"
+              />
+            </a>
+            <a
+              href="https://github.com/boldizsar-pal/rembg-web/blob/main/LICENSE"
+              class="badge"
+            >
+              <img
+                src="https://img.shields.io/npm/l/@bunnio/rembg-web?style=flat-square"
+                alt="License"
+              />
+            </a>
+            <a
+              href="https://bundlephobia.com/package/@bunnio/rembg-web"
+              class="badge"
+            >
+              <img
+                src="https://img.shields.io/bundlephobia/minzip/@bunnio/rembg-web?style=flat-square"
+                alt="Bundle size"
+              />
+            </a>
+          </div>
+          <div class="hero-actions">
+            <a href="#getting-started" class="btn btn-primary">Get Started</a>
+            <a href="examples/" class="btn btn-secondary">View Examples</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="container">
+          <h2>Features</h2>
+          <div class="features-grid">
+            <div class="feature">
+              <div class="feature-icon">🚀</div>
+              <h3>Browser-Native</h3>
+              <p>
+                Runs entirely in the browser using WebAssembly. No server
+                required.
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">🎯</div>
+              <h3>Multiple AI Models</h3>
+              <p>
+                Support for U2Net, ISNet, and Silueta models optimized for
+                different use cases.
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">⚡</div>
+              <h3>Hardware Acceleration</h3>
+              <p>
+                Optional WebNN and WebGPU support for faster processing on
+                supported devices.
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">🎨</div>
+              <h3>Flexible Input</h3>
+              <p>
+                Accepts File, Blob, ArrayBuffer, HTMLImageElement, or
+                HTMLCanvasElement.
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">🔧</div>
+              <h3>Customizable</h3>
+              <p>
+                Support for custom models, post-processing, and background
+                replacement.
+              </p>
+            </div>
+            <div class="feature">
+              <div class="feature-icon">📦</div>
+              <h3>Small Bundle</h3>
+              <p>
+                Optimized for size with tree-shaking support. ~8KB gzipped core
+                library.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="getting-started" class="getting-started">
+        <div class="container">
+          <h2>Quick Start</h2>
+
+          <div class="install-section">
+            <h3>Installation</h3>
+            <div class="code-block">
+              <pre><code>npm install @bunnio/rembg-web
+# or
+yarn add @bunnio/rembg-web</code></pre>
+            </div>
+          </div>
+
+          <div class="usage-section">
+            <h3>Basic Usage</h3>
+            <div class="code-block">
+              <pre><code>import { remove, newSession } from '@bunnio/rembg-web';
+
+// Basic usage
+const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+const file = fileInput.files[0];
+
+const result = await remove(file);
+const url = URL.createObjectURL(result);
+
+// With custom options
+const result = await remove(file, {
+  onlyMask: true, // Return only the mask
+  postProcessMask: true, // Apply smoothing
+  bgcolor: [255, 0, 0, 255], // Red background
+  session: newSession('u2net_human_seg'), // Use specific model
+  onProgress: info => {
+    console.log(`${info.step}: ${info.progress}% - ${info.message}`);
+  },
+});</code></pre>
+            </div>
+          </div>
+
+          <div class="cdn-section">
+            <h3>CDN Usage</h3>
+            <p>
+              You can also use rembg-web directly from a CDN without
+              installation:
+            </p>
+            <div class="code-block">
+              <pre><code>&lt;script type="module"&gt;
+  import { remove, newSession } from 'https://unpkg.com/@bunnio/rembg-web@latest/dist/index.js';
+  
+  // Your code here
+&lt;/script&gt;</code></pre>
+            </div>
+          </div>
+
+          <div class="model-setup">
+            <h3>Model Setup</h3>
+            <p>Download the required ONNX model files:</p>
+            <div class="code-block">
+              <pre><code># Download all models
+yarn fetch-models
+
+# Or download specific models
+yarn fetch-models u2net.onnx</code></pre>
+            </div>
+            <p>
+              See the <a href="guides/models.html">Models Guide</a> for more
+              information about available models and their use cases.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="models">
+        <div class="container">
+          <h2>Available Models</h2>
+          <div class="models-grid">
+            <div class="model">
+              <h3>u2net</h3>
+              <p class="model-size">~176MB</p>
+              <p>General-purpose background removal (default)</p>
+            </div>
+            <div class="model">
+              <h3>u2netp</h3>
+              <p class="model-size">~4.7MB</p>
+              <p>Lightweight version for faster processing</p>
+            </div>
+            <div class="model">
+              <h3>u2net_human_seg</h3>
+              <p class="model-size">~176MB</p>
+              <p>Optimized for human subjects</p>
+            </div>
+            <div class="model">
+              <h3>u2net_cloth_seg</h3>
+              <p class="model-size">~176MB</p>
+              <p>Specialized for clothing segmentation</p>
+            </div>
+            <div class="model">
+              <h3>isnet-general-use</h3>
+              <p class="model-size">~178MB</p>
+              <p>High accuracy general purpose model</p>
+            </div>
+            <div class="model">
+              <h3>isnet-anime</h3>
+              <p class="model-size">~178MB</p>
+              <p>Optimized for anime-style images</p>
+            </div>
+            <div class="model">
+              <h3>silueta</h3>
+              <p class="model-size">~43MB</p>
+              <p>Silhouette-based background removal</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="browser-support">
+        <div class="container">
+          <h2>Browser Support</h2>
+          <div class="browser-grid">
+            <div class="browser">
+              <div class="browser-icon">🌐</div>
+              <h3>Chrome/Edge 88+</h3>
+              <p>Full support including WebNN (119+) and WebGPU (113+)</p>
+            </div>
+            <div class="browser">
+              <div class="browser-icon">🦊</div>
+              <h3>Firefox 78+</h3>
+              <p>Full support (WebGPU behind flag)</p>
+            </div>
+            <div class="browser">
+              <div class="browser-icon">🧭</div>
+              <h3>Safari 14+</h3>
+              <p>Full support (WebGPU in Technology Preview)</p>
+            </div>
+          </div>
+          <p class="browser-note">
+            Requires WebAssembly and Web Workers support. Hardware acceleration
+            features require modern browsers with experimental flags enabled.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>@bunnio/rembg-web</h3>
+            <p>AI-powered background removal for the web</p>
+          </div>
+          <div class="footer-section">
+            <h4>Documentation</h4>
+            <ul>
+              <li><a href="api/index.html">API Reference</a></li>
+              <li><a href="examples/">Examples</a></li>
+              <li><a href="guides/">Guides</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Community</h4>
+            <ul>
+              <li>
+                <a href="https://github.com/bunn-io/rembg-web">GitHub</a>
+              </li>
+              <li>
+                <a href="https://github.com/bunn-io/rembg-web/issues">Issues</a>
+              </li>
+              <li>
+                <a href="https://github.com/bunn-io/rembg-web/discussions"
+                  >Discussions</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Resources</h4>
+            <ul>
+              <li>
+                <a href="https://www.npmjs.com/package/@bunnio/rembg-web"
+                  >npm Package</a
+                >
+              </li>
+              <li>
+                <a href="https://github.com/danielgatis/rembg"
+                  >Original rembg</a
+                >
+              </li>
+              <li>
+                <a href="https://github.com/bunn-io/rembg-web/blob/main/LICENSE"
+                  >License</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Boldizsar Pal. Licensed under MIT.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>
