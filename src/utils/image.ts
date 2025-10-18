@@ -7,12 +7,12 @@ import { logInfo, logPerformance, logError } from './logger';
  * @interface NormalizationParams
  */
 export interface NormalizationParams {
-    /** Mean values for RGB channels (typically ImageNet values) */
-    mean: [number, number, number];
-    /** Standard deviation values for RGB channels (typically ImageNet values) */
-    std: [number, number, number];
-    /** Target size [width, height] for model input */
-    size: [number, number];
+  /** Mean values for RGB channels (typically ImageNet values) */
+  mean: [number, number, number];
+  /** Standard deviation values for RGB channels (typically ImageNet values) */
+  std: [number, number, number];
+  /** Target size [width, height] for model input */
+  size: [number, number];
 }
 
 /**
@@ -39,25 +39,25 @@ export interface NormalizationParams {
  * ```
  */
 export function imageToCanvas(
-    image: HTMLImageElement | ImageData
+  image: HTMLImageElement | ImageData
 ): HTMLCanvasElement {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        throw new Error('Failed to get context for canvas');
-    }
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Failed to get context for canvas');
+  }
 
-    if (image instanceof HTMLImageElement) {
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
-        ctx.drawImage(image, 0, 0);
-    } else {
-        canvas.width = image.width;
-        canvas.height = image.height;
-        ctx.putImageData(image, 0, 0);
-    }
+  if (image instanceof HTMLImageElement) {
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    ctx.drawImage(image, 0, 0);
+  } else {
+    canvas.width = image.width;
+    canvas.height = image.height;
+    ctx.putImageData(image, 0, 0);
+  }
 
-    return canvas;
+  return canvas;
 }
 
 /**
@@ -81,11 +81,11 @@ export function imageToCanvas(
  * ```
  */
 export function canvasToImageData(canvas: HTMLCanvasElement): ImageData {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        throw new Error('Failed to get context for canvas');
-    }
-    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Failed to get context for canvas');
+  }
+  return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 /**
@@ -115,15 +115,15 @@ export function canvasToImageData(canvas: HTMLCanvasElement): ImageData {
  * ```
  */
 export function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
-    const canvas = document.createElement('canvas');
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        throw new Error('Failed to get context for canvas');
-    }
-    ctx.putImageData(imageData, 0, 0);
-    return canvas;
+  const canvas = document.createElement('canvas');
+  canvas.width = imageData.width;
+  canvas.height = imageData.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Failed to get context for canvas');
+  }
+  ctx.putImageData(imageData, 0, 0);
+  return canvas;
 }
 
 /**
@@ -151,34 +151,34 @@ export function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
  * ```
  */
 export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
-    const startTime = performance.now();
-    logInfo(
-        `[fileToImage] Converting ${file instanceof File ? file.name : 'blob'} (${(file.size / 1024).toFixed(1)}KB)...`
-    );
+  const startTime = performance.now();
+  logInfo(
+    `[fileToImage] Converting ${file instanceof File ? file.name : 'blob'} (${(file.size / 1024).toFixed(1)}KB)...`
+  );
 
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(file);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
 
-        img.onload = () => {
-            const loadTime = performance.now() - startTime;
-            logPerformance(
-                `[fileToImage] Image loaded: ${loadTime.toFixed(2)}ms (${img.naturalWidth}x${img.naturalHeight})`
-            );
-            URL.revokeObjectURL(objectUrl);
-            resolve(img);
-        };
-        img.onerror = error => {
-            const errorTime = performance.now() - startTime;
-            logError(
-                `[fileToImage] Image load failed: ${errorTime.toFixed(2)}ms`,
-                error
-            );
-            URL.revokeObjectURL(objectUrl);
-            reject(error);
-        };
-        img.src = objectUrl;
-    });
+    img.onload = () => {
+      const loadTime = performance.now() - startTime;
+      logPerformance(
+        `[fileToImage] Image loaded: ${loadTime.toFixed(2)}ms (${img.naturalWidth}x${img.naturalHeight})`
+      );
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
+    };
+    img.onerror = error => {
+      const errorTime = performance.now() - startTime;
+      logError(
+        `[fileToImage] Image load failed: ${errorTime.toFixed(2)}ms`,
+        error
+      );
+      URL.revokeObjectURL(objectUrl);
+      reject(error);
+    };
+    img.src = objectUrl;
+  });
 }
 
 /**
@@ -206,37 +206,37 @@ export function fileToImage(file: File | Blob): Promise<HTMLImageElement> {
  * ```
  */
 export function arrayBufferToImage(
-    buffer: ArrayBuffer
+  buffer: ArrayBuffer
 ): Promise<HTMLImageElement> {
-    const startTime = performance.now();
-    logInfo(
-        `[arrayBufferToImage] Converting buffer (${(buffer.byteLength / 1024).toFixed(1)}KB)...`
-    );
+  const startTime = performance.now();
+  logInfo(
+    `[arrayBufferToImage] Converting buffer (${(buffer.byteLength / 1024).toFixed(1)}KB)...`
+  );
 
-    return new Promise((resolve, reject) => {
-        const blob = new Blob([buffer]);
-        const img = new Image();
-        const objectUrl = URL.createObjectURL(blob);
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([buffer]);
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(blob);
 
-        img.onload = () => {
-            const loadTime = performance.now() - startTime;
-            logPerformance(
-                `[arrayBufferToImage] Image loaded: ${loadTime.toFixed(2)}ms (${img.naturalWidth}x${img.naturalHeight})`
-            );
-            URL.revokeObjectURL(objectUrl);
-            resolve(img);
-        };
-        img.onerror = error => {
-            const errorTime = performance.now() - startTime;
-            logError(
-                `[arrayBufferToImage] Image load failed: ${errorTime.toFixed(2)}ms`,
-                error
-            );
-            URL.revokeObjectURL(objectUrl);
-            reject(error);
-        };
-        img.src = objectUrl;
-    });
+    img.onload = () => {
+      const loadTime = performance.now() - startTime;
+      logPerformance(
+        `[arrayBufferToImage] Image loaded: ${loadTime.toFixed(2)}ms (${img.naturalWidth}x${img.naturalHeight})`
+      );
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
+    };
+    img.onerror = error => {
+      const errorTime = performance.now() - startTime;
+      logError(
+        `[arrayBufferToImage] Image load failed: ${errorTime.toFixed(2)}ms`,
+        error
+      );
+      URL.revokeObjectURL(objectUrl);
+      reject(error);
+    };
+    img.src = objectUrl;
+  });
 }
 
 /**
@@ -272,30 +272,30 @@ export function arrayBufferToImage(
  * ```
  */
 export function canvasToBlob(
-    canvas: HTMLCanvasElement,
-    mimeType: string = 'image/png'
+  canvas: HTMLCanvasElement,
+  mimeType: string = 'image/png'
 ): Promise<Blob> {
-    const startTime = performance.now();
-    logInfo(
-        `[canvasToBlob] Converting ${canvas.width}x${canvas.height} canvas to ${mimeType}...`
-    );
+  const startTime = performance.now();
+  logInfo(
+    `[canvasToBlob] Converting ${canvas.width}x${canvas.height} canvas to ${mimeType}...`
+  );
 
-    return new Promise((resolve, reject) => {
-        canvas.toBlob(blob => {
-            const conversionTime = performance.now() - startTime;
-            if (blob) {
-                logPerformance(
-                    `[canvasToBlob] Conversion complete: ${conversionTime.toFixed(2)}ms (${(blob.size / 1024).toFixed(1)}KB)`
-                );
-                resolve(blob);
-            } else {
-                logError(
-                    `[canvasToBlob] Conversion failed: ${conversionTime.toFixed(2)}ms`
-                );
-                reject(new Error('Failed to convert canvas to blob'));
-            }
-        }, mimeType);
-    });
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      const conversionTime = performance.now() - startTime;
+      if (blob) {
+        logPerformance(
+          `[canvasToBlob] Conversion complete: ${conversionTime.toFixed(2)}ms (${(blob.size / 1024).toFixed(1)}KB)`
+        );
+        resolve(blob);
+      } else {
+        logError(
+          `[canvasToBlob] Conversion failed: ${conversionTime.toFixed(2)}ms`
+        );
+        reject(new Error('Failed to convert canvas to blob'));
+      }
+    }, mimeType);
+  });
 }
 
 /**
@@ -328,87 +328,82 @@ export function canvasToBlob(
  * ```
  */
 export function normalizeImage(
-    canvas: HTMLCanvasElement,
-    params: NormalizationParams,
-    inputName: string = 'input.1'
+  canvas: HTMLCanvasElement,
+  params: NormalizationParams,
+  inputName: string = 'input.1'
 ): { [inputName: string]: ort.Tensor } {
-    const startTime = performance.now();
+  const startTime = performance.now();
 
-    // Create a temporary canvas for resizing
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = params.size[0];
-    tempCanvas.height = params.size[1];
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) {
-        throw new Error('Failed to get context for temp canvas');
+  // Create a temporary canvas for resizing
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = params.size[0];
+  tempCanvas.height = params.size[1];
+  const tempCtx = tempCanvas.getContext('2d');
+  if (!tempCtx) {
+    throw new Error('Failed to get context for temp canvas');
+  }
+
+  // Enable high-quality image smoothing (closest to LANCZOS)
+  tempCtx.imageSmoothingEnabled = true;
+  tempCtx.imageSmoothingQuality = 'high';
+
+  // Resize image
+  tempCtx.drawImage(canvas, 0, 0, params.size[0], params.size[1]);
+  const resizeTime = performance.now();
+
+  // Get pixel data
+  const imageData = tempCtx.getImageData(0, 0, params.size[0], params.size[1]);
+  const data = imageData.data;
+  const width = params.size[0];
+  const height = params.size[1];
+
+  // Find max value across all pixels (like Python: im_ary / max(np.max(im_ary), 1e-6))
+  let maxValue = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i] / 255.0;
+    const g = data[i + 1] / 255.0;
+    const b = data[i + 2] / 255.0;
+    maxValue = Math.max(maxValue, r, g, b);
+  }
+  const divisor = Math.max(maxValue, 1e-6);
+  const maxFindTime = performance.now();
+
+  // Create normalized array (CHW format: channels, height, width)
+  const normalized = new Float32Array(3 * height * width);
+
+  // Normalize each channel
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const pixelIndex = (y * width + x) * 4;
+      const r = data[pixelIndex] / 255.0;
+      const g = data[pixelIndex + 1] / 255.0;
+      const b = data[pixelIndex + 2] / 255.0;
+
+      // Apply dynamic normalization then (pixel - mean) / std
+      // Matches Python: im_ary = im_ary / max(np.max(im_ary), 1e-6)
+      const rNormalized = r / divisor;
+      const gNormalized = g / divisor;
+      const bNormalized = b / divisor;
+
+      // Apply mean/std normalization
+      const rNorm = (rNormalized - params.mean[0]) / params.std[0];
+      const gNorm = (gNormalized - params.mean[1]) / params.std[1];
+      const bNorm = (bNormalized - params.mean[2]) / params.std[2];
+
+      // Store in CHW format
+      normalized[y * width + x] = rNorm; // R channel
+      normalized[height * width + y * width + x] = gNorm; // G channel
+      normalized[2 * height * width + y * width + x] = bNorm; // B channel
     }
+  }
+  const normalizeTime = performance.now();
 
-    // Enable high-quality image smoothing (closest to LANCZOS)
-    tempCtx.imageSmoothingEnabled = true;
-    tempCtx.imageSmoothingQuality = 'high';
+  // Create ONNX tensor
+  const tensor = new ort.Tensor('float32', normalized, [1, 3, height, width]);
+  const tensorTime = performance.now();
 
-    // Resize image
-    tempCtx.drawImage(canvas, 0, 0, params.size[0], params.size[1]);
-    const resizeTime = performance.now();
-
-    // Get pixel data
-    const imageData = tempCtx.getImageData(
-        0,
-        0,
-        params.size[0],
-        params.size[1]
-    );
-    const data = imageData.data;
-    const width = params.size[0];
-    const height = params.size[1];
-
-    // Find max value across all pixels (like Python: im_ary / max(np.max(im_ary), 1e-6))
-    let maxValue = 0;
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i] / 255.0;
-        const g = data[i + 1] / 255.0;
-        const b = data[i + 2] / 255.0;
-        maxValue = Math.max(maxValue, r, g, b);
-    }
-    const divisor = Math.max(maxValue, 1e-6);
-    const maxFindTime = performance.now();
-
-    // Create normalized array (CHW format: channels, height, width)
-    const normalized = new Float32Array(3 * height * width);
-
-    // Normalize each channel
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const pixelIndex = (y * width + x) * 4;
-            const r = data[pixelIndex] / 255.0;
-            const g = data[pixelIndex + 1] / 255.0;
-            const b = data[pixelIndex + 2] / 255.0;
-
-            // Apply dynamic normalization then (pixel - mean) / std
-            // Matches Python: im_ary = im_ary / max(np.max(im_ary), 1e-6)
-            const rNormalized = r / divisor;
-            const gNormalized = g / divisor;
-            const bNormalized = b / divisor;
-
-            // Apply mean/std normalization
-            const rNorm = (rNormalized - params.mean[0]) / params.std[0];
-            const gNorm = (gNormalized - params.mean[1]) / params.std[1];
-            const bNorm = (bNormalized - params.mean[2]) / params.std[2];
-
-            // Store in CHW format
-            normalized[y * width + x] = rNorm; // R channel
-            normalized[height * width + y * width + x] = gNorm; // G channel
-            normalized[2 * height * width + y * width + x] = bNorm; // B channel
-        }
-    }
-    const normalizeTime = performance.now();
-
-    // Create ONNX tensor
-    const tensor = new ort.Tensor('float32', normalized, [1, 3, height, width]);
-    const tensorTime = performance.now();
-
-    // Log performance metrics
-    logPerformance(`[normalizeImage] Performance:
+  // Log performance metrics
+  logPerformance(`[normalizeImage] Performance:
     - Resize: ${(resizeTime - startTime).toFixed(2)}ms
     - Max find: ${(maxFindTime - resizeTime).toFixed(2)}ms
     - Normalize: ${(normalizeTime - maxFindTime).toFixed(2)}ms
@@ -416,7 +411,7 @@ export function normalizeImage(
     - Total: ${(tensorTime - startTime).toFixed(2)}ms
     - Max value: ${maxValue.toFixed(6)}, Divisor: ${divisor.toFixed(6)}`);
 
-    return { [inputName]: tensor };
+  return { [inputName]: tensor };
 }
 
 /**
@@ -450,103 +445,103 @@ export function normalizeImage(
  * ```
  */
 export function processModelOutput(
-    output: Float32Array,
-    originalSize: { width: number; height: number },
-    outputShape: [number, number, number, number] = [1, 1, 320, 320]
+  output: Float32Array,
+  originalSize: { width: number; height: number },
+  outputShape: [number, number, number, number] = [1, 1, 320, 320]
 ): HTMLCanvasElement {
-    const startTime = performance.now();
-    logInfo(
-        `[processModelOutput] Processing output (${output.length} values) for ${originalSize.width}x${originalSize.height} image...`
-    );
+  const startTime = performance.now();
+  logInfo(
+    `[processModelOutput] Processing output (${output.length} values) for ${originalSize.width}x${originalSize.height} image...`
+  );
 
-    const [, , height, width] = outputShape;
+  const [, , height, width] = outputShape;
 
-    // Extract the mask data
-    const extractStart = performance.now();
-    const maskData = output.slice(0, height * width);
-    const extractTime = performance.now() - extractStart;
-    logPerformance(
-        `[processModelOutput] Data extraction: ${extractTime.toFixed(2)}ms`
-    );
+  // Extract the mask data
+  const extractStart = performance.now();
+  const maskData = output.slice(0, height * width);
+  const extractTime = performance.now() - extractStart;
+  logPerformance(
+    `[processModelOutput] Data extraction: ${extractTime.toFixed(2)}ms`
+  );
 
-    // Find min/max for normalization
-    const minMaxStart = performance.now();
-    let min = maskData[0];
-    let max = maskData[0];
-    for (let i = 1; i < maskData.length; i++) {
-        if (maskData[i] < min) min = maskData[i];
-        if (maskData[i] > max) max = maskData[i];
-    }
-    const minMaxTime = performance.now() - minMaxStart;
-    logPerformance(
-        `[processModelOutput] Min/max calculation: ${minMaxTime.toFixed(2)}ms (min=${min.toFixed(6)}, max=${max.toFixed(6)})`
-    );
+  // Find min/max for normalization
+  const minMaxStart = performance.now();
+  let min = maskData[0];
+  let max = maskData[0];
+  for (let i = 1; i < maskData.length; i++) {
+    if (maskData[i] < min) min = maskData[i];
+    if (maskData[i] > max) max = maskData[i];
+  }
+  const minMaxTime = performance.now() - minMaxStart;
+  logPerformance(
+    `[processModelOutput] Min/max calculation: ${minMaxTime.toFixed(2)}ms (min=${min.toFixed(6)}, max=${max.toFixed(6)})`
+  );
 
-    // Normalize to 0-1 range
-    const normalizeStart = performance.now();
-    const normalized = new Float32Array(maskData.length);
-    for (let i = 0; i < maskData.length; i++) {
-        normalized[i] = (maskData[i] - min) / (max - min);
-    }
-    const normalizeTime = performance.now() - normalizeStart;
-    logPerformance(
-        `[processModelOutput] Normalization: ${normalizeTime.toFixed(2)}ms`
-    );
+  // Normalize to 0-1 range
+  const normalizeStart = performance.now();
+  const normalized = new Float32Array(maskData.length);
+  for (let i = 0; i < maskData.length; i++) {
+    normalized[i] = (maskData[i] - min) / (max - min);
+  }
+  const normalizeTime = performance.now() - normalizeStart;
+  logPerformance(
+    `[processModelOutput] Normalization: ${normalizeTime.toFixed(2)}ms`
+  );
 
-    // Create canvas for mask
-    const canvasCreateStart = performance.now();
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = width;
-    maskCanvas.height = height;
-    const maskCtx = maskCanvas.getContext('2d');
-    if (!maskCtx) {
-        throw new Error('Failed to get context for mask canvas');
-    }
-    const maskImageData = maskCtx.createImageData(width, height);
+  // Create canvas for mask
+  const canvasCreateStart = performance.now();
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = width;
+  maskCanvas.height = height;
+  const maskCtx = maskCanvas.getContext('2d');
+  if (!maskCtx) {
+    throw new Error('Failed to get context for mask canvas');
+  }
+  const maskImageData = maskCtx.createImageData(width, height);
 
-    // Set grayscale data
-    for (let i = 0; i < normalized.length; i++) {
-        const value = Math.round(normalized[i] * 255);
-        const pixelIndex = i * 4;
-        maskImageData.data[pixelIndex] = value; // R
-        maskImageData.data[pixelIndex + 1] = value; // G
-        maskImageData.data[pixelIndex + 2] = value; // B
-        maskImageData.data[pixelIndex + 3] = 255; // A
-    }
+  // Set grayscale data
+  for (let i = 0; i < normalized.length; i++) {
+    const value = Math.round(normalized[i] * 255);
+    const pixelIndex = i * 4;
+    maskImageData.data[pixelIndex] = value; // R
+    maskImageData.data[pixelIndex + 1] = value; // G
+    maskImageData.data[pixelIndex + 2] = value; // B
+    maskImageData.data[pixelIndex + 3] = 255; // A
+  }
 
-    maskCtx.putImageData(maskImageData, 0, 0);
-    const canvasCreateTime = performance.now() - canvasCreateStart;
-    logPerformance(
-        `[processModelOutput] Canvas creation: ${canvasCreateTime.toFixed(2)}ms`
-    );
+  maskCtx.putImageData(maskImageData, 0, 0);
+  const canvasCreateTime = performance.now() - canvasCreateStart;
+  logPerformance(
+    `[processModelOutput] Canvas creation: ${canvasCreateTime.toFixed(2)}ms`
+  );
 
-    // Resize to original image size
-    const resizeStart = performance.now();
-    const resizedCanvas = document.createElement('canvas');
-    resizedCanvas.width = originalSize.width;
-    resizedCanvas.height = originalSize.height;
-    const resizedCtx = resizedCanvas.getContext('2d');
-    if (!resizedCtx) {
-        throw new Error('Failed to get context for resized canvas');
-    }
-    resizedCtx.drawImage(
-        maskCanvas,
-        0,
-        0,
-        originalSize.width,
-        originalSize.height
-    );
-    const resizeTime = performance.now() - resizeStart;
-    logPerformance(
-        `[processModelOutput] Resize: ${resizeTime.toFixed(2)}ms (${width}x${height} → ${originalSize.width}x${originalSize.height})`
-    );
+  // Resize to original image size
+  const resizeStart = performance.now();
+  const resizedCanvas = document.createElement('canvas');
+  resizedCanvas.width = originalSize.width;
+  resizedCanvas.height = originalSize.height;
+  const resizedCtx = resizedCanvas.getContext('2d');
+  if (!resizedCtx) {
+    throw new Error('Failed to get context for resized canvas');
+  }
+  resizedCtx.drawImage(
+    maskCanvas,
+    0,
+    0,
+    originalSize.width,
+    originalSize.height
+  );
+  const resizeTime = performance.now() - resizeStart;
+  logPerformance(
+    `[processModelOutput] Resize: ${resizeTime.toFixed(2)}ms (${width}x${height} → ${originalSize.width}x${originalSize.height})`
+  );
 
-    const totalTime = performance.now() - startTime;
-    logPerformance(
-        `[processModelOutput] Total processing: ${totalTime.toFixed(2)}ms`
-    );
+  const totalTime = performance.now() - startTime;
+  logPerformance(
+    `[processModelOutput] Total processing: ${totalTime.toFixed(2)}ms`
+  );
 
-    return resizedCanvas;
+  return resizedCanvas;
 }
 
 /**
@@ -576,71 +571,69 @@ export function processModelOutput(
  * ```
  */
 export function naiveCutout(
-    imageCanvas: HTMLCanvasElement,
-    maskCanvas: HTMLCanvasElement
+  imageCanvas: HTMLCanvasElement,
+  maskCanvas: HTMLCanvasElement
 ): HTMLCanvasElement {
-    const startTime = performance.now();
-    logInfo(
-        `[naiveCutout] Creating cutout for ${imageCanvas.width}x${imageCanvas.height} image...`
-    );
+  const startTime = performance.now();
+  logInfo(
+    `[naiveCutout] Creating cutout for ${imageCanvas.width}x${imageCanvas.height} image...`
+  );
 
-    const result = document.createElement('canvas');
-    result.width = imageCanvas.width;
-    result.height = imageCanvas.height;
-    const resultCtx = result.getContext('2d');
-    if (!resultCtx) {
-        throw new Error('Failed to get context for result canvas');
-    }
+  const result = document.createElement('canvas');
+  result.width = imageCanvas.width;
+  result.height = imageCanvas.height;
+  const resultCtx = result.getContext('2d');
+  if (!resultCtx) {
+    throw new Error('Failed to get context for result canvas');
+  }
 
-    // Draw the original image
-    const drawStart = performance.now();
-    resultCtx.drawImage(imageCanvas, 0, 0);
-    const drawTime = performance.now() - drawStart;
-    logPerformance(`[naiveCutout] Image draw: ${drawTime.toFixed(2)}ms`);
+  // Draw the original image
+  const drawStart = performance.now();
+  resultCtx.drawImage(imageCanvas, 0, 0);
+  const drawTime = performance.now() - drawStart;
+  logPerformance(`[naiveCutout] Image draw: ${drawTime.toFixed(2)}ms`);
 
-    // Get image and mask data
-    const dataExtractionStart = performance.now();
-    const imageData = resultCtx.getImageData(0, 0, result.width, result.height);
-    const maskCtx = maskCanvas.getContext('2d');
-    if (!maskCtx) {
-        throw new Error('Failed to get context for mask canvas');
-    }
-    const maskData = maskCtx.getImageData(
-        0,
-        0,
-        maskCanvas.width,
-        maskCanvas.height
-    );
-    const dataExtractionTime = performance.now() - dataExtractionStart;
-    logPerformance(
-        `[naiveCutout] Data extraction: ${dataExtractionTime.toFixed(2)}ms`
-    );
+  // Get image and mask data
+  const dataExtractionStart = performance.now();
+  const imageData = resultCtx.getImageData(0, 0, result.width, result.height);
+  const maskCtx = maskCanvas.getContext('2d');
+  if (!maskCtx) {
+    throw new Error('Failed to get context for mask canvas');
+  }
+  const maskData = maskCtx.getImageData(
+    0,
+    0,
+    maskCanvas.width,
+    maskCanvas.height
+  );
+  const dataExtractionTime = performance.now() - dataExtractionStart;
+  logPerformance(
+    `[naiveCutout] Data extraction: ${dataExtractionTime.toFixed(2)}ms`
+  );
 
-    // Apply mask as alpha channel
-    const maskApplicationStart = performance.now();
-    for (let i = 0; i < imageData.data.length; i += 4) {
-        const maskIndex = i;
-        const maskValue = maskData.data[maskIndex]; // Use red channel as mask value
-        imageData.data[i + 3] = maskValue; // Set alpha channel
-    }
-    const maskApplicationTime = performance.now() - maskApplicationStart;
-    logPerformance(
-        `[naiveCutout] Mask application: ${maskApplicationTime.toFixed(2)}ms`
-    );
+  // Apply mask as alpha channel
+  const maskApplicationStart = performance.now();
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    const maskIndex = i;
+    const maskValue = maskData.data[maskIndex]; // Use red channel as mask value
+    imageData.data[i + 3] = maskValue; // Set alpha channel
+  }
+  const maskApplicationTime = performance.now() - maskApplicationStart;
+  logPerformance(
+    `[naiveCutout] Mask application: ${maskApplicationTime.toFixed(2)}ms`
+  );
 
-    const putImageStart = performance.now();
-    resultCtx.putImageData(imageData, 0, 0);
-    const putImageTime = performance.now() - putImageStart;
-    logPerformance(
-        `[naiveCutout] Put image data: ${putImageTime.toFixed(2)}ms`
-    );
+  const putImageStart = performance.now();
+  resultCtx.putImageData(imageData, 0, 0);
+  const putImageTime = performance.now() - putImageStart;
+  logPerformance(`[naiveCutout] Put image data: ${putImageTime.toFixed(2)}ms`);
 
-    const totalTime = performance.now() - startTime;
-    logPerformance(
-        `[naiveCutout] Total cutout creation: ${totalTime.toFixed(2)}ms`
-    );
+  const totalTime = performance.now() - startTime;
+  logPerformance(
+    `[naiveCutout] Total cutout creation: ${totalTime.toFixed(2)}ms`
+  );
 
-    return result;
+  return result;
 }
 
 /**
@@ -669,27 +662,27 @@ export function naiveCutout(
  * ```
  */
 export function applyBackgroundColor(
-    imageCanvas: HTMLCanvasElement,
-    color: [number, number, number, number]
+  imageCanvas: HTMLCanvasElement,
+  color: [number, number, number, number]
 ): HTMLCanvasElement {
-    const result = document.createElement('canvas');
-    result.width = imageCanvas.width;
-    result.height = imageCanvas.height;
-    const resultCtx = result.getContext('2d');
-    if (!resultCtx) {
-        throw new Error('Failed to get context for result canvas');
-    }
+  const result = document.createElement('canvas');
+  result.width = imageCanvas.width;
+  result.height = imageCanvas.height;
+  const resultCtx = result.getContext('2d');
+  if (!resultCtx) {
+    throw new Error('Failed to get context for result canvas');
+  }
 
-    // Fill with background color
-    resultCtx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${
-        color[3] / 255
-    })`;
-    resultCtx.fillRect(0, 0, result.width, result.height);
+  // Fill with background color
+  resultCtx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${
+    color[3] / 255
+  })`;
+  resultCtx.fillRect(0, 0, result.width, result.height);
 
-    // Composite the image on top
-    resultCtx.drawImage(imageCanvas, 0, 0);
+  // Composite the image on top
+  resultCtx.drawImage(imageCanvas, 0, 0);
 
-    return result;
+  return result;
 }
 
 /**
@@ -716,22 +709,22 @@ export function applyBackgroundColor(
  * ```
  */
 export function postProcessMask(
-    maskCanvas: HTMLCanvasElement
+  maskCanvas: HTMLCanvasElement
 ): HTMLCanvasElement {
-    const result = document.createElement('canvas');
-    result.width = maskCanvas.width;
-    result.height = maskCanvas.height;
-    const resultCtx = result.getContext('2d');
-    if (!resultCtx) {
-        throw new Error('Failed to get context for result canvas');
-    }
+  const result = document.createElement('canvas');
+  result.width = maskCanvas.width;
+  result.height = maskCanvas.height;
+  const resultCtx = result.getContext('2d');
+  if (!resultCtx) {
+    throw new Error('Failed to get context for result canvas');
+  }
 
-    // Apply a simple blur effect
-    resultCtx.filter = 'blur(2px)';
-    resultCtx.drawImage(maskCanvas, 0, 0);
-    resultCtx.filter = 'none';
+  // Apply a simple blur effect
+  resultCtx.filter = 'blur(2px)';
+  resultCtx.drawImage(maskCanvas, 0, 0);
+  resultCtx.filter = 'none';
 
-    return result;
+  return result;
 }
 
 /**
@@ -762,31 +755,31 @@ export function postProcessMask(
  * ```
  */
 export function createMaskOnly(
-    maskCanvas: HTMLCanvasElement
+  maskCanvas: HTMLCanvasElement
 ): HTMLCanvasElement {
-    const result = document.createElement('canvas');
-    result.width = maskCanvas.width;
-    result.height = maskCanvas.height;
-    const resultCtx = result.getContext('2d');
-    if (!resultCtx) {
-        throw new Error('Failed to get context for result canvas');
-    }
+  const result = document.createElement('canvas');
+  result.width = maskCanvas.width;
+  result.height = maskCanvas.height;
+  const resultCtx = result.getContext('2d');
+  if (!resultCtx) {
+    throw new Error('Failed to get context for result canvas');
+  }
 
-    // Draw mask as grayscale
-    resultCtx.drawImage(maskCanvas, 0, 0);
+  // Draw mask as grayscale
+  resultCtx.drawImage(maskCanvas, 0, 0);
 
-    // Convert to grayscale
-    const imageData = resultCtx.getImageData(0, 0, result.width, result.height);
-    const data = imageData.data;
+  // Convert to grayscale
+  const imageData = resultCtx.getImageData(0, 0, result.width, result.height);
+  const data = imageData.data;
 
-    for (let i = 0; i < data.length; i += 4) {
-        const gray = data[i]; // Use red channel as grayscale value
-        data[i] = gray; // R
-        data[i + 1] = gray; // G
-        data[i + 2] = gray; // B
-        data[i + 3] = 255; // A
-    }
+  for (let i = 0; i < data.length; i += 4) {
+    const gray = data[i]; // Use red channel as grayscale value
+    data[i] = gray; // R
+    data[i + 1] = gray; // G
+    data[i + 2] = gray; // B
+    data[i + 3] = 255; // A
+  }
 
-    resultCtx.putImageData(imageData, 0, 0);
-    return result;
+  resultCtx.putImageData(imageData, 0, 0);
+  return result;
 }

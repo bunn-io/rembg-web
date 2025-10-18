@@ -111,6 +111,57 @@ A tool for comparing two images pixel by pixel and highlighting differences.
 - Debugging image processing results
 - Performance analysis between different processing methods
 
+### 7. Model Selection (`model-selection.html`)
+
+Demonstrates how to select between different AI models for background removal.
+
+**Features:**
+
+- Dropdown to choose from 7 different models
+- Model information and use case descriptions
+- Real-time model switching
+- Performance characteristics for each model
+- Optimized model selection for different use cases
+
+**Available Models:**
+
+- **U2Net:** General purpose, balanced speed and accuracy
+- **U2NetP:** Lightweight version, fastest processing
+- **U2Net Human Segmentation:** Optimized for people/portraits
+- **U2Net Cloth Segmentation:** Specialized for clothing items
+- **Silueta:** Alternative model with different characteristics
+- **ISNet General Use:** High accuracy for general images
+- **ISNet Anime:** Optimized for anime/manga style images
+
+**Use Cases:**
+
+- Choosing the right model for specific image types
+- Comparing model performance
+- Optimizing for speed vs. accuracy
+- Specialized use cases (anime, clothing, portraits)
+
+### 8. Batch Processing (`batch-processing.html`)
+
+Process multiple images at once using the fastest model (U2NetP) with ZIP download.
+
+**Features:**
+
+- Multiple image selection and processing
+- Uses U2NetP model for fastest processing
+- Real-time progress tracking
+- Performance statistics (total time, average time, success rate)
+- Download all results as a ZIP file
+- Grid display of all processed images
+- Individual processing time per image
+
+**Use Cases:**
+
+- Bulk image processing
+- E-commerce product photography
+- Batch background removal workflows
+- High-volume image processing
+- Automated image processing pipelines
+
 ## Running the Examples
 
 ### Quick Start (Recommended)
@@ -178,6 +229,8 @@ Open your browser and navigate to:
 - `http://localhost:8080/examples/session-reuse.html`
 - `http://localhost:8080/examples/progress-tracking.html`
 - `http://localhost:8080/examples/pixel-compare.html`
+- `http://localhost:8080/examples/model-selection.html`
+- `http://localhost:8080/examples/batch-processing.html`
 
 ### ⚠️ Important Note
 

@@ -5,7 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-10-20
+## [1.0.1] - 2025-10-18
+
+### Added
+
+- **New Examples**: Added two comprehensive example implementations
+  - **Model Selection Example** (`examples/model-selection.html`): Interactive demo for choosing between 7 different AI models with real-time switching and performance characteristics
+  - **Batch Processing Example** (`examples/batch-processing.html`): Multi-image processing with ZIP download, progress tracking, and performance statistics
+- **New Public APIs**: Enhanced library with advanced mask processing capabilities
+  - `results.applyRawMask()`: Apply raw model output masks to create cutouts
+  - `results.mergeMasks()`: Combine multiple raw masks into a single mask
+  - `canvasTools.processModelOutput()`: Process raw model output into usable masks
+  - `canvasTools.normalizeImage()`: Normalize image data for processing
+- **Enhanced Documentation**: Updated examples documentation with detailed descriptions and use cases for all examples
+
+### Changed
+
+- **Development Workflow**: Updated `docs:serve` script to use `http-server` for better local development experience
+- **Dependencies**: Added `http-server` as development dependency for improved documentation serving
+
+### Technical Improvements
+
+- **Code Organization**: Better separation of mask processing utilities
+- **API Design**: More granular control over mask processing pipeline
+- **Example Coverage**: Comprehensive examples covering all major use cases
+- **Developer Experience**: Improved local development setup with better documentation serving
+
+## [1.0.0] - 2025-10-17
 
 ### Added
 

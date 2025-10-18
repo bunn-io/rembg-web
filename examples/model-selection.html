@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rembg-web - Model Selection Example</title>
+    <script src="https://unpkg.com/onnxruntime-web@latest/dist/ort.min.js"></script>
+    <script src="https://unpkg.com/@bunnio/rembg-web@latest/dist/index.umd.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+      }
+      .image-container {
+        flex: 1;
+        text-align: center;
+      }
+      .image-container img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .controls {
+        margin: 20px 0;
+        text-align: center;
+      }
+      .model-selector {
+        margin: 15px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+      }
+      .model-selector label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #495057;
+      }
+      .model-selector select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 14px;
+        background: white;
+      }
+      .model-info {
+        margin-top: 10px;
+        padding: 10px;
+        background: #e9ecef;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #6c757d;
+      }
+      input[type='file'] {
+        margin: 10px;
+      }
+      button {
+        background: #6f42c1;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #5a32a3;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .loading {
+        display: none;
+        color: #6f42c1;
+      }
+      .error {
+        display: none;
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      .status {
+        display: none;
+        color: #6c757d;
+        font-size: 14px;
+        margin: 10px 0;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border-left: 3px solid #6f42c1;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        padding: 12px 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+        border-left: 4px solid #ffc107;
+      }
+      .model-comparison {
+        background: #d1ecf1;
+        color: #0c5460;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      .model-comparison h4 {
+        margin-top: 0;
+      }
+      .model-comparison ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+      .model-comparison li {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>rembg-web - Model Selection Example</h1>
+    <p>
+      This example demonstrates how to select between different AI models for
+      background removal. Each model has different characteristics in terms of
+      speed, accuracy, and use cases.
+    </p>
+
+    <div class="warning">
+      <strong>⚠️ Data Usage Notice:</strong> First-time usage will download the
+      AI model (~200-300MB). Subsequent uses will load from cache. Please ensure
+      you have a stable internet connection and sufficient data allowance.
+    </div>
+
+    <div class="model-comparison">
+      <h4>Available Models:</h4>
+      <ul>
+        <li>
+          <strong>U2Net:</strong> General purpose, balanced speed and accuracy
+        </li>
+        <li>
+          <strong>U2NetP:</strong> Lightweight version, fastest processing
+        </li>
+        <li>
+          <strong>U2Net Human Segmentation:</strong> Optimized for
+          people/portraits
+        </li>
+        <li>
+          <strong>U2Net Cloth Segmentation:</strong> Specialized for clothing
+          items
+        </li>
+        <li>
+          <strong>Silueta:</strong> Alternative model with different
+          characteristics
+        </li>
+        <li>
+          <strong>ISNet General Use:</strong> High accuracy for general images
+        </li>
+        <li>
+          <strong>ISNet Anime:</strong> Optimized for anime/manga style images
+        </li>
+      </ul>
+    </div>
+
+    <div class="model-selector">
+      <label for="modelSelect">Select AI Model:</label>
+      <select id="modelSelect">
+        <option value="u2net">U2Net (General Purpose)</option>
+        <option value="u2netp">U2NetP (Fastest)</option>
+        <option value="u2net_human_seg">U2Net Human Segmentation</option>
+        <option value="u2net_cloth_seg">U2Net Cloth Segmentation</option>
+        <option value="silueta">Silueta</option>
+        <option value="isnet_general_use">ISNet General Use</option>
+        <option value="isnet_anime">ISNet Anime</option>
+      </select>
+      <div class="model-info" id="modelInfo">
+        <strong>U2Net (General Purpose):</strong> Balanced model suitable for
+        most images. Good accuracy with reasonable processing time.
+      </div>
+    </div>
+
+    <div class="controls">
+      <input type="file" id="fileInput" accept="image/*" />
+      <button id="processBtn">Process Image</button>
+      <div class="loading" id="loading">Processing...</div>
+      <div class="status" id="status"></div>
+      <div class="error" id="error"></div>
+    </div>
+
+    <div class="container">
+      <div class="image-container">
+        <h3>Original Image</h3>
+        <img
+          id="originalImg"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIGltYWdlIHNlbGVjdGVkPC90ZXh0Pjwvc3ZnPg=="
+          alt="No image selected"
+        />
+      </div>
+      <div class="image-container">
+        <h3>Processed Image</h3>
+        <img
+          id="processedImg"
+          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPldhaXRpbmcgZm9yIHByb2Nlc3NpbmcuLi48L3RleHQ+PC9zdmc+"
+          alt="Waiting for processing"
+        />
+      </div>
+    </div>
+
+    <script type="module">
+      const { remove, rembgConfig } = RembgWeb;
+
+      // Configure model base URL
+      rembgConfig.setBaseUrl(
+        'https://huggingface.co/bunnio/dis_anime/resolve/main'
+      );
+
+      // Model information
+      const modelInfo = {
+        u2net: {
+          name: 'U2Net (General Purpose)',
+          description:
+            'Balanced model suitable for most images. Good accuracy with reasonable processing time.',
+          useCase: 'General purpose background removal',
+        },
+        u2netp: {
+          name: 'U2NetP (Fast)',
+          description:
+            'Lightweight version optimized for speed. Fastest processing with good quality.',
+          useCase: 'Quick processing, batch operations',
+        },
+        u2net_human_seg: {
+          name: 'U2Net Human Segmentation',
+          description:
+            'Specialized for people and portraits. Best accuracy for human subjects.',
+          useCase: 'Portraits, people, human subjects',
+        },
+        u2net_cloth_seg: {
+          name: 'U2Net Cloth Segmentation',
+          description:
+            'Optimized for clothing and fashion items. Great for e-commerce.',
+          useCase: 'Clothing, fashion, e-commerce',
+        },
+        silueta: {
+          name: 'Silueta (Fast)',
+          description:
+            'Alternative model with different processing characteristics.',
+          useCase: 'Alternative approach to background removal',
+        },
+        isnet_general_use: {
+          name: 'ISNet General Use',
+          description:
+            'High accuracy model for general images. Best quality results.',
+          useCase: 'High-quality general background removal',
+        },
+        isnet_anime: {
+          name: 'ISNet Anime',
+          description:
+            'Specialized for anime and manga style images. Optimized for artistic content.',
+          useCase: 'Anime, manga, artistic illustrations',
+        },
+      };
+
+      // Get DOM elements
+      const fileInput = document.getElementById('fileInput');
+      const modelSelect = document.getElementById('modelSelect');
+      const processBtn = document.getElementById('processBtn');
+      const loading = document.getElementById('loading');
+      const status = document.getElementById('status');
+      const error = document.getElementById('error');
+      const originalImg = document.getElementById('originalImg');
+      const processedImg = document.getElementById('processedImg');
+      const modelInfoDiv = document.getElementById('modelInfo');
+
+      // Update model information display
+      function updateModelInfo() {
+        const selectedModel = modelSelect.value;
+        const info = modelInfo[selectedModel];
+        modelInfoDiv.innerHTML = `
+          <strong>${info.name}:</strong> ${info.description}
+          <br><strong>Best for:</strong> ${info.useCase}
+        `;
+      }
+
+      // Show/hide loading state
+      function setLoading(isLoading) {
+        loading.style.display = isLoading ? 'block' : 'none';
+        processBtn.disabled = isLoading;
+        processBtn.textContent = isLoading ? 'Processing...' : 'Process Image';
+      }
+
+      // Show error message
+      function showError(message) {
+        error.textContent = message;
+        error.style.display = 'block';
+      }
+
+      // Hide error message
+      function hideError() {
+        error.style.display = 'none';
+      }
+
+      // Update status message
+      function updateStatus(message) {
+        status.textContent = message;
+        status.style.display = 'block';
+      }
+
+      // Hide status message
+      function hideStatus() {
+        status.style.display = 'none';
+      }
+
+      // Process the image with selected model
+      async function processImage() {
+        const file = fileInput.files[0];
+        if (!file) {
+          showError('Please select an image file first.');
+          return;
+        }
+
+        try {
+          setLoading(true);
+          hideError();
+          hideStatus();
+
+          // Show original image
+          const originalUrl = URL.createObjectURL(file);
+          originalImg.src = originalUrl;
+
+          const selectedModel = modelSelect.value;
+          updateStatus(`Processing with ${modelInfo[selectedModel].name}...`);
+
+          // Process the image with selected model
+          const processedBlob = await remove(file, {
+            model: selectedModel,
+            postProcessMask: true,
+            onProgress: info => {
+              updateStatus(`${info.step}: ${info.message}`);
+            },
+          });
+
+          // Show processed image
+          const processedUrl = URL.createObjectURL(processedBlob);
+          processedImg.src = processedUrl;
+
+          // Clean up original URL
+          URL.revokeObjectURL(originalUrl);
+        } catch (err) {
+          console.error('Error processing image:', err);
+          showError(`Error: ${err.message}`);
+          hideStatus();
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      // Event listeners
+      processBtn.addEventListener('click', processImage);
+
+      fileInput.addEventListener('change', e => {
+        if (e.target.files[0]) {
+          hideError();
+        }
+      });
+
+      modelSelect.addEventListener('change', updateModelInfo);
+
+      // Initialize model info
+      updateModelInfo();
+    </script>
+  </body>
+</html>

@@ -18,9 +18,9 @@ import { logInfo, logPerformance, logDebug, logWarn } from './logger';
  * ```
  */
 export type WebGPUPowerPreference =
-    | 'default'
-    | 'low-power'
-    | 'high-performance';
+  | 'default'
+  | 'low-power'
+  | 'high-performance';
 
 /**
  * WebGPU configuration options.
@@ -33,7 +33,7 @@ export type WebGPUPowerPreference =
  * ```
  */
 export interface WebGPUConfig {
-    powerPreference: WebGPUPowerPreference;
+  powerPreference: WebGPUPowerPreference;
 }
 
 /**
@@ -51,18 +51,18 @@ export interface WebGPUConfig {
  * ```
  */
 export function isWebGPUAvailable(): boolean {
-    try {
-        // Check if the WebGPU API is available
-        return (
-            typeof navigator !== 'undefined' &&
-            'gpu' in navigator &&
-            typeof navigator.gpu === 'object' &&
-            navigator.gpu !== null
-        );
-    } catch (error) {
-        logDebug('WebGPU availability check failed:', error);
-        return false;
-    }
+  try {
+    // Check if the WebGPU API is available
+    return (
+      typeof navigator !== 'undefined' &&
+      'gpu' in navigator &&
+      typeof navigator.gpu === 'object' &&
+      navigator.gpu !== null
+    );
+  } catch (error) {
+    logDebug('WebGPU availability check failed:', error);
+    return false;
+  }
 }
 
 /**
@@ -80,58 +80,58 @@ export function isWebGPUAvailable(): boolean {
  * ```
  */
 export async function getWebGPUDevice(
-    options?: GPURequestAdapterOptions
+  options?: GPURequestAdapterOptions
 ): Promise<GPUDevice | null> {
-    const startTime = performance.now();
-    logInfo('[getWebGPUDevice] Requesting WebGPU device...');
+  const startTime = performance.now();
+  logInfo('[getWebGPUDevice] Requesting WebGPU device...');
 
-    if (!isWebGPUAvailable()) {
-        const totalTime = performance.now() - startTime;
-        logPerformance(
-            `[getWebGPUDevice] WebGPU not available: ${totalTime.toFixed(2)}ms`
-        );
-        return null;
+  if (!isWebGPUAvailable()) {
+    const totalTime = performance.now() - startTime;
+    logPerformance(
+      `[getWebGPUDevice] WebGPU not available: ${totalTime.toFixed(2)}ms`
+    );
+    return null;
+  }
+
+  try {
+    // Request adapter
+    const adapterRequestStart = performance.now();
+    const adapter = await navigator.gpu?.requestAdapter(options);
+    const adapterRequestTime = performance.now() - adapterRequestStart;
+    logPerformance(
+      `[getWebGPUDevice] Adapter request: ${adapterRequestTime.toFixed(2)}ms`
+    );
+
+    if (!adapter) {
+      const totalTime = performance.now() - startTime;
+      logPerformance(
+        `[getWebGPUDevice] No adapter available: ${totalTime.toFixed(2)}ms`
+      );
+      return null;
     }
 
-    try {
-        // Request adapter
-        const adapterRequestStart = performance.now();
-        const adapter = await navigator.gpu?.requestAdapter(options);
-        const adapterRequestTime = performance.now() - adapterRequestStart;
-        logPerformance(
-            `[getWebGPUDevice] Adapter request: ${adapterRequestTime.toFixed(2)}ms`
-        );
+    // Request device
+    const deviceRequestStart = performance.now();
+    const device = await adapter.requestDevice();
+    const deviceRequestTime = performance.now() - deviceRequestStart;
+    logPerformance(
+      `[getWebGPUDevice] Device request: ${deviceRequestTime.toFixed(2)}ms`
+    );
 
-        if (!adapter) {
-            const totalTime = performance.now() - startTime;
-            logPerformance(
-                `[getWebGPUDevice] No adapter available: ${totalTime.toFixed(2)}ms`
-            );
-            return null;
-        }
+    const totalTime = performance.now() - startTime;
+    logPerformance(
+      `[getWebGPUDevice] WebGPU device obtained: ${totalTime.toFixed(2)}ms`
+    );
 
-        // Request device
-        const deviceRequestStart = performance.now();
-        const device = await adapter.requestDevice();
-        const deviceRequestTime = performance.now() - deviceRequestStart;
-        logPerformance(
-            `[getWebGPUDevice] Device request: ${deviceRequestTime.toFixed(2)}ms`
-        );
-
-        const totalTime = performance.now() - startTime;
-        logPerformance(
-            `[getWebGPUDevice] WebGPU device obtained: ${totalTime.toFixed(2)}ms`
-        );
-
-        return device;
-    } catch (error) {
-        const totalTime = performance.now() - startTime;
-        logDebug(
-            `[getWebGPUDevice] Failed to get WebGPU device (${totalTime.toFixed(2)}ms):`,
-            error
-        );
-        return null;
-    }
+    return device;
+  } catch (error) {
+    const totalTime = performance.now() - startTime;
+    logDebug(
+      `[getWebGPUDevice] Failed to get WebGPU device (${totalTime.toFixed(2)}ms):`,
+      error
+    );
+    return null;
+  }
 }
 
 /**
@@ -149,20 +149,20 @@ export async function getWebGPUDevice(
  * ```
  */
 export function validateWebGPUConfig(options: SessionOptions): boolean {
-    // Check power preference
-    if (
-        options?.webgpuPowerPreference &&
-        !['default', 'low-power', 'high-performance'].includes(
-            options.webgpuPowerPreference
-        )
-    ) {
-        logWarn(
-            `Invalid WebGPU power preference: ${options.webgpuPowerPreference}`
-        );
-        return false;
-    }
+  // Check power preference
+  if (
+    options?.webgpuPowerPreference &&
+    !['default', 'low-power', 'high-performance'].includes(
+      options.webgpuPowerPreference
+    )
+  ) {
+    logWarn(
+      `Invalid WebGPU power preference: ${options.webgpuPowerPreference}`
+    );
+    return false;
+  }
 
-    return true;
+  return true;
 }
 
 /**
@@ -179,15 +179,15 @@ export function validateWebGPUConfig(options: SessionOptions): boolean {
  * ```
  */
 export function getWebGPUContextOptions(
-    options: SessionOptions
+  options: SessionOptions
 ): SessionOptions & Partial<WebGPUConfig> {
-    const contextOptions: SessionOptions & Partial<WebGPUConfig> = {};
+  const contextOptions: SessionOptions & Partial<WebGPUConfig> = {};
 
-    if (options.webgpuPowerPreference) {
-        contextOptions.powerPreference = options.webgpuPowerPreference;
-    }
+  if (options.webgpuPowerPreference) {
+    contextOptions.powerPreference = options.webgpuPowerPreference;
+  }
 
-    return contextOptions;
+  return contextOptions;
 }
 
 /**
@@ -203,57 +203,57 @@ export function getWebGPUContextOptions(
  * ```
  */
 export async function getWebGPUInfo(): Promise<{
-    available: boolean;
-    adapterInfo: GPUAdapterInfo | null;
-    userAgent: string;
+  available: boolean;
+  adapterInfo: GPUAdapterInfo | null;
+  userAgent: string;
 }> {
-    const startTime = performance.now();
-    logInfo('[getWebGPUInfo] Gathering WebGPU information...');
+  const startTime = performance.now();
+  logInfo('[getWebGPUInfo] Gathering WebGPU information...');
 
-    const availabilityCheckStart = performance.now();
-    const available = isWebGPUAvailable();
-    const availabilityCheckTime = performance.now() - availabilityCheckStart;
-    logPerformance(
-        `[getWebGPUInfo] Availability check: ${availabilityCheckTime.toFixed(2)}ms`
-    );
+  const availabilityCheckStart = performance.now();
+  const available = isWebGPUAvailable();
+  const availabilityCheckTime = performance.now() - availabilityCheckStart;
+  logPerformance(
+    `[getWebGPUInfo] Availability check: ${availabilityCheckTime.toFixed(2)}ms`
+  );
 
-    let adapterInfo: GPUAdapterInfo | null = null;
+  let adapterInfo: GPUAdapterInfo | null = null;
 
-    if (available) {
-        try {
-            const adapterRequestStart = performance.now();
-            const adapter = await navigator.gpu?.requestAdapter();
-            const adapterRequestTime = performance.now() - adapterRequestStart;
-            logPerformance(
-                `[getWebGPUInfo] Adapter request: ${adapterRequestTime.toFixed(2)}ms`
-            );
+  if (available) {
+    try {
+      const adapterRequestStart = performance.now();
+      const adapter = await navigator.gpu?.requestAdapter();
+      const adapterRequestTime = performance.now() - adapterRequestStart;
+      logPerformance(
+        `[getWebGPUInfo] Adapter request: ${adapterRequestTime.toFixed(2)}ms`
+      );
 
-            if (adapter && 'requestAdapterInfo' in adapter) {
-                const infoRequestStart = performance.now();
-                adapterInfo = (await (
-                    adapter.requestAdapterInfo as unknown as () => Promise<GPUAdapterInfo>
-                )()) as unknown as GPUAdapterInfo;
-                const infoRequestTime = performance.now() - infoRequestStart;
-                logPerformance(
-                    `[getWebGPUInfo] Adapter info request: ${infoRequestTime.toFixed(2)}ms`
-                );
-            }
-        } catch (error) {
-            logDebug('[getWebGPUInfo] Failed to get adapter info:', error);
-        }
+      if (adapter && 'requestAdapterInfo' in adapter) {
+        const infoRequestStart = performance.now();
+        adapterInfo = (await (
+          adapter.requestAdapterInfo as unknown as () => Promise<GPUAdapterInfo>
+        )()) as unknown as GPUAdapterInfo;
+        const infoRequestTime = performance.now() - infoRequestStart;
+        logPerformance(
+          `[getWebGPUInfo] Adapter info request: ${infoRequestTime.toFixed(2)}ms`
+        );
+      }
+    } catch (error) {
+      logDebug('[getWebGPUInfo] Failed to get adapter info:', error);
     }
+  }
 
-    const totalTime = performance.now() - startTime;
-    logPerformance(
-        `[getWebGPUInfo] Total info gathering: ${totalTime.toFixed(2)}ms (available: ${available})`
-    );
+  const totalTime = performance.now() - startTime;
+  logPerformance(
+    `[getWebGPUInfo] Total info gathering: ${totalTime.toFixed(2)}ms (available: ${available})`
+  );
 
-    return {
-        available,
-        adapterInfo,
-        userAgent:
-            typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-    };
+  return {
+    available,
+    adapterInfo,
+    userAgent:
+      typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+  };
 }
 
 /**
@@ -267,16 +267,16 @@ export async function getWebGPUInfo(): Promise<{
  * ```
  */
 export async function logWebGPUInfo(): Promise<void> {
-    const info = await getWebGPUInfo();
+  const info = await getWebGPUInfo();
 
-    if (info.available) {
-        logInfo('WebGPU Support: Available');
-        if (info.adapterInfo) {
-            logInfo(
-                `WebGPU Adapter: ${info.adapterInfo.vendor} ${info.adapterInfo.architecture}`
-            );
-        }
-    } else {
-        logInfo('WebGPU Support: Not Available');
+  if (info.available) {
+    logInfo('WebGPU Support: Available');
+    if (info.adapterInfo) {
+      logInfo(
+        `WebGPU Adapter: ${info.adapterInfo.vendor} ${info.adapterInfo.architecture}`
+      );
     }
+  } else {
+    logInfo('WebGPU Support: Not Available');
+  }
 }

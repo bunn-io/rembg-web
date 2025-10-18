@@ -1,6 +1,6 @@
 {
   "name": "@bunnio/rembg-web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shameless copy of danielgatis/rembg, but for the web. 90% organic GMO free AI generated code.",
   "type": "module",
   "main": "dist/index.js",
@@ -46,7 +46,7 @@
     "fetch-models": "tsx scripts/fetch-models.ts",
     "docs:build": "typedoc",
     "docs:build-pages": "tsx scripts/build-docs.ts",
-    "docs:serve": "typedoc --watch",
+    "docs:serve": "cd docs-site && http-server -p 3000 -o",
     "publish:dry": "npm publish --dry-run",
     "publish:beta": "npm publish --tag beta",
     "act": "act --secret-file .nektos.secret"
@@ -98,9 +98,9 @@
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "@vitest/ui": "^3.2.4",
-    "canvas": "^3.2.0",
     "eslint": "^8.0.0",
     "fake-indexeddb": "^6.2.3",
+    "http-server": "^14.1.1",
     "jsdom": "^27.0.0",
     "jszip": "^3.10.1",
     "pngjs": "^7.0.0",

@@ -84,6 +84,8 @@ const examples = [
   'cloth-segmentation.html',
   'global-usage.html',
   'pixel-compare.html',
+  'model-selection.html',
+  'batch-processing.html',
 ];
 
 examples.forEach(exampleFile => {

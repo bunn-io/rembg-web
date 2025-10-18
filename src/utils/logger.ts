@@ -19,9 +19,9 @@ import { rembgConfig } from '../config';
  * ```
  */
 export function logInfo(...args: Parameters<typeof console.log>): void {
-    if (rembgConfig.isGeneralLoggingEnabled()) {
-        console.log(...args);
-    }
+  if (rembgConfig.isGeneralLoggingEnabled()) {
+    console.log(...args);
+  }
 }
 
 /**
@@ -36,9 +36,9 @@ export function logInfo(...args: Parameters<typeof console.log>): void {
  * ```
  */
 export function logDebug(...args: Parameters<typeof console.log>): void {
-    if (rembgConfig.isGeneralLoggingEnabled()) {
-        console.log(...args);
-    }
+  if (rembgConfig.isGeneralLoggingEnabled()) {
+    console.log(...args);
+  }
 }
 
 /**
@@ -53,9 +53,9 @@ export function logDebug(...args: Parameters<typeof console.log>): void {
  * ```
  */
 export function logPerformance(...args: Parameters<typeof console.log>): void {
-    if (rembgConfig.isPerformanceLoggingEnabled()) {
-        console.log(...args);
-    }
+  if (rembgConfig.isPerformanceLoggingEnabled()) {
+    console.log(...args);
+  }
 }
 
 /**
@@ -70,7 +70,7 @@ export function logPerformance(...args: Parameters<typeof console.log>): void {
  * ```
  */
 export function logWarn(...args: Parameters<typeof console.warn>): void {
-    console.warn(...args);
+  console.warn(...args);
 }
 
 /**
@@ -85,7 +85,7 @@ export function logWarn(...args: Parameters<typeof console.warn>): void {
  * ```
  */
 export function logError(...args: Parameters<typeof console.error>): void {
-    console.error(...args);
+  console.error(...args);
 }
 
 /**
@@ -103,7 +103,7 @@ export function logError(...args: Parameters<typeof console.error>): void {
  * ```
  */
 export function enableGeneralLogging(enable: boolean): void {
-    rembgConfig.enableGeneralLogging(enable);
+  rembgConfig.enableGeneralLogging(enable);
 }
 
 /**
@@ -121,7 +121,7 @@ export function enableGeneralLogging(enable: boolean): void {
  * ```
  */
 export function enablePerformanceLogging(enable: boolean): void {
-    rembgConfig.enablePerformanceLogging(enable);
+  rembgConfig.enablePerformanceLogging(enable);
 }
 
 /**
@@ -137,7 +137,7 @@ export function enablePerformanceLogging(enable: boolean): void {
  * ```
  */
 export function isGeneralLoggingEnabled(): boolean {
-    return rembgConfig.isGeneralLoggingEnabled();
+  return rembgConfig.isGeneralLoggingEnabled();
 }
 
 /**
@@ -153,7 +153,7 @@ export function isGeneralLoggingEnabled(): boolean {
  * ```
  */
 export function isPerformanceLoggingEnabled(): boolean {
-    return rembgConfig.isPerformanceLoggingEnabled();
+  return rembgConfig.isPerformanceLoggingEnabled();
 }
 
 /**
@@ -171,7 +171,7 @@ export function isPerformanceLoggingEnabled(): boolean {
  * ```
  */
 export function enableONNXProfiling(enable: boolean): void {
-    rembgConfig.enableONNXProfiling(enable);
+  rembgConfig.enableONNXProfiling(enable);
 }
 
 /**
@@ -187,5 +187,5 @@ export function enableONNXProfiling(enable: boolean): void {
  * ```
  */
 export function isONNXProfilingEnabled(): boolean {
-    return rembgConfig.isONNXProfilingEnabled();
+  return rembgConfig.isONNXProfilingEnabled();
 }

@@ -9,6 +9,8 @@ import {
   applyBackgroundColor,
   postProcessMask,
   createMaskOnly,
+  processModelOutput,
+  normalizeImage,
 } from './utils/image';
 import { logInfo, logPerformance, logError } from './utils/logger';
 
@@ -469,6 +471,55 @@ export async function removeToCanvas(
 }
 
 /**
+ * Apply a raw mask to a source canvas to create a cutout.
+ * Does not change the source canvas.
+ *
+ * This function processes a raw Float32Array mask from a model and applies it
+ * to the original canvas to create a background-removed cutout.
+ *
+ * @param rawMask - Raw mask data as Float32Array from model output
+ * @param sourceCanvas - Original input canvas to apply the mask to
+ * @returns HTMLCanvasElement with background removed using the mask
+ */
+function applyRawMask(
+  rawMask: Float32Array,
+  sourceCanvas: HTMLCanvasElement
+): HTMLCanvasElement {
+  const result = processModelOutput(rawMask, {
+    width: sourceCanvas.width,
+    height: sourceCanvas.height,
+  });
+  const cutout = naiveCutout(sourceCanvas, result);
+  return cutout;
+}
+
+/**
+ * Merge multiple masks into a single combined mask.
+ *
+ * This function combines multiple Float32Array masks by taking the maximum
+ * value at each pixel position. This is useful when you have multiple
+ * model outputs that need to be combined into a single mask.
+ *
+ * @param masks - Array of Float32Array masks to merge
+ * @returns Float32Array representing the combined mask
+ */
+function mergeMasks(masks: Float32Array[]): Float32Array {
+  const combinedMask = new Float32Array(masks[0].length);
+  for (let i = 0; i < masks[0].length; i++) {
+    combinedMask[i] = masks[0][i];
+    for (let j = 1; j < masks.length; j++) {
+      combinedMask[i] = Math.max(combinedMask[i], masks[j][i]);
+    }
+  }
+  return combinedMask;
+}
+
+export const results = {
+  applyRawMask,
+  mergeMasks,
+};
+
+/**
  * Create a new session for the specified model.
  *
  * Sessions are used to manage model loading, caching, and inference.
@@ -624,6 +675,8 @@ const canvasTools = {
   applyBackgroundColor,
   postProcessMask,
   createMaskOnly,
+  processModelOutput,
+  normalizeImage,
 };
 export { canvasTools };
 // Export integrity utilities

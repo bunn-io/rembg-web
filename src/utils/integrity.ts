@@ -8,25 +8,25 @@
 // Known SHA256 hashes for model files
 // These should be updated when models are updated
 const MODEL_HASHES: Record<string, string> = {
-    'u2net.onnx':
-        'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
-    'u2netp.onnx':
-        'b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567',
-    'u2net_human_seg.onnx':
-        'c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
-    'u2net_cloth_seg.onnx':
-        'd4e5f6789012345678901234567890abcdef1234567890abcdef123456789',
-    'silueta.onnx':
-        '75da6c8d2f8096ec743d071951be73b4a8bc7b3e51d9a6625d63644f90ffeedb',
+  'u2net.onnx':
+    'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
+  'u2netp.onnx':
+    'b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef1234567',
+  'u2net_human_seg.onnx':
+    'c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
+  'u2net_cloth_seg.onnx':
+    'd4e5f6789012345678901234567890abcdef1234567890abcdef123456789',
+  'silueta.onnx':
+    '75da6c8d2f8096ec743d071951be73b4a8bc7b3e51d9a6625d63644f90ffeedb',
 };
 
 /**
  * Compute SHA256 hash of an ArrayBuffer
  */
 async function computeSHA256(buffer: ArrayBuffer): Promise<string> {
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -45,37 +45,34 @@ async function computeSHA256(buffer: ArrayBuffer): Promise<string> {
  * ```
  */
 export async function verifyModelIntegrity(
-    modelName: string,
-    modelData: ArrayBuffer
+  modelName: string,
+  modelData: ArrayBuffer
 ): Promise<boolean> {
-    try {
-        // Get expected hash
-        const expectedHash = MODEL_HASHES[modelName];
-        if (!expectedHash) {
-            console.warn(`No hash available for model: ${modelName}`);
-            return true; // Allow if no hash is configured
-        }
-
-        // Compute actual hash
-        const actualHash = await computeSHA256(modelData);
-
-        // Compare hashes
-        const isValid = actualHash === expectedHash;
-
-        if (!isValid) {
-            console.error(`Model integrity check failed for ${modelName}`);
-            console.error(`Expected: ${expectedHash}`);
-            console.error(`Actual: ${actualHash}`);
-        }
-
-        return isValid;
-    } catch (error) {
-        console.error(
-            `Error verifying model integrity for ${modelName}:`,
-            error
-        );
-        return false;
+  try {
+    // Get expected hash
+    const expectedHash = MODEL_HASHES[modelName];
+    if (!expectedHash) {
+      console.warn(`No hash available for model: ${modelName}`);
+      return true; // Allow if no hash is configured
     }
+
+    // Compute actual hash
+    const actualHash = await computeSHA256(modelData);
+
+    // Compare hashes
+    const isValid = actualHash === expectedHash;
+
+    if (!isValid) {
+      console.error(`Model integrity check failed for ${modelName}`);
+      console.error(`Expected: ${expectedHash}`);
+      console.error(`Actual: ${actualHash}`);
+    }
+
+    return isValid;
+  } catch (error) {
+    console.error(`Error verifying model integrity for ${modelName}:`, error);
+    return false;
+  }
 }
 
 /**
@@ -98,7 +95,7 @@ export async function verifyModelIntegrity(
  * ```
  */
 export function getModelHash(modelName: string): string | null {
-    return MODEL_HASHES[modelName] ?? null;
+  return MODEL_HASHES[modelName] ?? null;
 }
 
 /**
@@ -124,7 +121,7 @@ export function getModelHash(modelName: string): string | null {
  * ```
  */
 export function setModelHash(modelName: string, hash: string): void {
-    MODEL_HASHES[modelName] = hash;
+  MODEL_HASHES[modelName] = hash;
 }
 
 /**
@@ -147,7 +144,7 @@ export function setModelHash(modelName: string, hash: string): void {
  * ```
  */
 export function getAllModelHashes(): Record<string, string> {
-    return { ...MODEL_HASHES };
+  return { ...MODEL_HASHES };
 }
 
 /**
@@ -176,37 +173,37 @@ export function getAllModelHashes(): Record<string, string> {
  * ```
  */
 export function validateModelSize(
-    modelName: string,
-    modelData: ArrayBuffer
+  modelName: string,
+  modelData: ArrayBuffer
 ): boolean {
-    const size = modelData.byteLength;
-    const sizeMB = size / (1024 * 1024);
+  const size = modelData.byteLength;
+  const sizeMB = size / (1024 * 1024);
 
-    // Expected size ranges in MB (with some tolerance)
-    const expectedSizes: Record<string, { min: number; max: number }> = {
-        'u2net.onnx': { min: 170, max: 180 },
-        'u2netp.onnx': { min: 4, max: 5 },
-        'u2net_human_seg.onnx': { min: 170, max: 180 },
-        'u2net_cloth_seg.onnx': { min: 170, max: 180 },
-        'silueta.onnx': { min: 40, max: 50 }, // ~43MB
-    };
+  // Expected size ranges in MB (with some tolerance)
+  const expectedSizes: Record<string, { min: number; max: number }> = {
+    'u2net.onnx': { min: 170, max: 180 },
+    'u2netp.onnx': { min: 4, max: 5 },
+    'u2net_human_seg.onnx': { min: 170, max: 180 },
+    'u2net_cloth_seg.onnx': { min: 170, max: 180 },
+    'silueta.onnx': { min: 40, max: 50 }, // ~43MB
+  };
 
-    const expected = expectedSizes[modelName];
-    if (!expected) {
-        console.warn(`No size validation available for model: ${modelName}`);
-        return true; // Allow if no size constraints are configured
-    }
+  const expected = expectedSizes[modelName];
+  if (!expected) {
+    console.warn(`No size validation available for model: ${modelName}`);
+    return true; // Allow if no size constraints are configured
+  }
 
-    const isValid = sizeMB >= expected.min && sizeMB <= expected.max;
+  const isValid = sizeMB >= expected.min && sizeMB <= expected.max;
 
-    if (!isValid) {
-        console.error(`Model size validation failed for ${modelName}`);
-        console.error(
-            `Expected: ${expected.min}-${expected.max}MB, got: ${sizeMB.toFixed(2)}MB`
-        );
-    }
+  if (!isValid) {
+    console.error(`Model size validation failed for ${modelName}`);
+    console.error(
+      `Expected: ${expected.min}-${expected.max}MB, got: ${sizeMB.toFixed(2)}MB`
+    );
+  }
 
-    return isValid;
+  return isValid;
 }
 
 /**
@@ -235,20 +232,20 @@ export function validateModelSize(
  * ```
  */
 export async function validateModel(
-    modelName: string,
-    modelData: ArrayBuffer
+  modelName: string,
+  modelData: ArrayBuffer
 ): Promise<boolean> {
-    // Check size first (faster)
-    const sizeValid = validateModelSize(modelName, modelData);
-    if (!sizeValid) {
-        return false;
-    }
+  // Check size first (faster)
+  const sizeValid = validateModelSize(modelName, modelData);
+  if (!sizeValid) {
+    return false;
+  }
 
-    // Check integrity
-    const integrityValid = await verifyModelIntegrity(modelName, modelData);
-    if (!integrityValid) {
-        return false;
-    }
+  // Check integrity
+  const integrityValid = await verifyModelIntegrity(modelName, modelData);
+  if (!integrityValid) {
+    return false;
+  }
 
-    return true;
+  return true;
 }

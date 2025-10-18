@@ -178,7 +178,7 @@
     </div>
 
     <script type="module">
-      const { U2NetClothSegSession, rembgConfig } = RembgWeb;
+      const { U2NetClothSegSession, rembgConfig, canvasTools } = RembgWeb;
 
       // Configure model base URL
       rembgConfig.setBaseUrl(
@@ -328,29 +328,10 @@
         masks.forEach((mask, index) => {
           const yOffset = index * originalCanvas.height;
 
+          const cutout = results.applyRawMask(mask, originalCanvas);
           // Draw original image
-          compositeCtx.drawImage(originalCanvas, 0, yOffset);
+          compositeCtx.drawImage(cutout, 0, yOffset);
 
-          // Apply mask with color overlay
-          compositeCtx.globalCompositeOperation = 'source-atop';
-          compositeCtx.fillStyle = colors[index];
-          compositeCtx.fillRect(
-            0,
-            yOffset,
-            originalCanvas.width,
-            originalCanvas.height
-          );
-
-          // Apply mask as alpha
-          compositeCtx.globalCompositeOperation = 'destination-in';
-          compositeCtx.drawImage(mask, 0, yOffset);
-
-          // Reset composite operation
-          compositeCtx.globalCompositeOperation = 'source-over';
-
-          // Add label
-          compositeCtx.fillStyle = '#000000';
-          compositeCtx.font = '16px Arial';
           compositeCtx.fillText(categories[index], 10, yOffset + 25);
         });
 
@@ -380,45 +361,29 @@
         const compositeItem = document.createElement('div');
         compositeItem.className = 'comparison-item';
 
-        if (masks.length === 1) {
-          // Single mask - could be a specific category or combined view
-          const singleMaskCanvas = document.createElement('canvas');
-          const singleMaskCtx = singleMaskCanvas.getContext('2d');
-          singleMaskCanvas.width = originalCanvas.width;
-          singleMaskCanvas.height = originalCanvas.height;
-
-          // Draw original
-          singleMaskCtx.drawImage(originalCanvas, 0, 0);
-
-          // Apply mask with color
-          singleMaskCtx.globalCompositeOperation = 'source-atop';
-          if (category === 'combined') {
-            singleMaskCtx.fillStyle = '#9b59b6'; // Purple for combined view
-          } else {
-            singleMaskCtx.fillStyle = '#ff6b6b'; // Red for individual categories
-          }
-          singleMaskCtx.fillRect(
-            0,
-            0,
-            originalCanvas.width,
-            originalCanvas.height
-          );
-
-          singleMaskCtx.globalCompositeOperation = 'destination-in';
-          singleMaskCtx.drawImage(masks[0], 0, 0);
-
-          const title =
-            category === 'combined'
-              ? 'Combined Clothing Mask'
-              : `${category.charAt(0).toUpperCase() + category.slice(1)} Body Cloth`;
-
+        if (category === 'combined') {
+          const combinedMask = results.mergeMasks(masks);
+          const cutout = results.applyRawMask(combinedMask, originalCanvas);
+          const title = 'Combined Clothing Mask';
           compositeItem.innerHTML = `
             <h4>${title}</h4>
-            <canvas width="${singleMaskCanvas.width}" height="${singleMaskCanvas.height}"></canvas>
+            <canvas width="${cutout.width}" height="${cutout.height}"></canvas>
           `;
           const canvas = compositeItem.querySelector('canvas');
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(singleMaskCanvas, 0, 0);
+          ctx.drawImage(cutout, 0, 0);
+        } else if (masks.length === 1) {
+          const cutout = results.applyRawMask(masks[0], originalCanvas);
+
+          const title = `${category.charAt(0).toUpperCase() + category.slice(1)} Body Cloth`;
+
+          compositeItem.innerHTML = `
+            <h4>${title}</h4>
+            <canvas width="${cutout.width}" height="${cutout.height}"></canvas>
+          `;
+          const canvas = compositeItem.querySelector('canvas');
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(cutout, 0, 0);
         } else {
           // Multiple masks - create composite
           const compositeCanvas = createCompositeImage(originalCanvas, masks);
