@@ -11,7 +11,82 @@
 
 [📖 Documentation](https://bunn-io.github.io/rembg-web/) • [🎮 Examples](https://bunn-io.github.io/rembg-web/examples/) • [📦 npm](https://www.npmjs.com/package/@bunnio/rembg-web) • [🐛 Issues](https://github.com/bunn-io/rembg-web/issues)
 
-## Available
+## Start using in minutes
+
+### Install in your project:
+
+```bash
+npm install @bunnio/rembg-web onnxruntime-web
+# or
+yarn add @bunnio/rembg-web onnxruntime-web
+```
+
+### Use embedded:
+
+**ES Module (recommended):**
+
+```html
+<head>
+  <!-- Load ONNX Runtime Web -->
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.16.3/dist/ort.min.js"></script>
+</head>
+<body>
+  <script type="module">
+    import {
+      remove,
+      rembgConfig,
+    } from 'https://unpkg.com/@bunnio/rembg-web@latest/dist/index.js';
+
+    // If you want to use the huggingface hosted model (only for dev)
+    // Configure model base URL
+    rembgConfig.setBaseUrl(
+      'https://huggingface.co/bunnio/dis_anime/resolve/main'
+    );
+
+    // Basic usage
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    const result = await remove(file);
+    const url = URL.createObjectURL(result);
+
+    // Display result
+    document.getElementById('result').src = url;
+  </script>
+</body>
+```
+
+**UMD (Universal Module Definition):**
+
+```html
+<!-- Load ONNX Runtime Web -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.16.3/dist/ort.min.js"></script>
+<script src="https://unpkg.com/@bunnio/rembg-web@latest/dist/index.umd.min.js"></script>
+<script>
+
+  // If you want to use the huggingface hosted model (only for dev)
+  // Configure model base URL
+  rembgWeb.rembgConfig.setBaseUrl(
+    'https://huggingface.co/bunnio/dis_anime/resolve/main'
+  );
+
+  // Basic usage
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+
+  const result = await rembgWeb.remove(file);
+  const url = URL.createObjectURL(result);
+
+  // Display result
+  document.getElementById('result').src = url;
+</script>
+```
+
+## Live Preview:
+
+> [More Examples!!](https://bunn-io.github.io/rembg-web/examples)
+
+## Available Models
 
 u2net models, silueta, dis (general, anime)
 
@@ -97,9 +172,9 @@ A web-based background removal library powered by AI models. This is a TypeScrip
 ## Installation
 
 ```bash
-npm install @bunnio/rembg-web
+npm install @bunnio/rembg-web onnxruntime-web
 # or
-yarn add @bunnio/rembg-web
+yarn add @bunnio/rembg-web onnxruntime-web
 ```
 
 ### CDN Usage
