@@ -100,6 +100,24 @@
         border-radius: 4px;
         margin: 10px 0;
       }
+      .status {
+        display: none;
+        color: #6c757d;
+        font-size: 14px;
+        margin: 10px 0;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border-left: 3px solid #007bff;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        padding: 12px 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+        border-left: 4px solid #ffc107;
+      }
     </style>
   </head>
   <body>
@@ -109,6 +127,12 @@
       Segmentation model. The model can identify and separate different clothing
       categories: upper body, lower body, and full body clothing.
     </p>
+
+    <div class="warning">
+      <strong>⚠️ Data Usage Notice:</strong> First-time usage will download the
+      AI model (~200-300MB). Subsequent uses will load from cache. Please ensure
+      you have a stable internet connection and sufficient data allowance.
+    </div>
 
     <div class="container">
       <div class="input-section">
@@ -141,6 +165,7 @@
         <div class="progress" id="progress">
           <div id="progressText">Processing...</div>
         </div>
+        <div class="status" id="status"></div>
         <div id="error" class="error" style="display: none"></div>
         <div id="outputContainer">
           <p>
@@ -157,7 +182,7 @@
 
       // Configure model base URL
       rembgConfig.setBaseUrl(
-        'https://github.com/bunn-io/rembg-web/releases/download/base-models'
+        'https://huggingface.co/bunnio/dis_anime/resolve/main'
       );
 
       const fileInput = document.getElementById('fileInput');
@@ -168,6 +193,7 @@
       const outputContainer = document.getElementById('outputContainer');
       const progress = document.getElementById('progress');
       const progressText = document.getElementById('progressText');
+      const status = document.getElementById('status');
       const errorDiv = document.getElementById('error');
 
       let session = null;
@@ -206,6 +232,17 @@
         progress.classList.remove('show');
       }
 
+      // Update status message
+      function updateStatus(message) {
+        status.textContent = message;
+        status.style.display = 'block';
+      }
+
+      // Hide status message
+      function hideStatus() {
+        status.style.display = 'none';
+      }
+
       // Handle file selection
       fileInput.addEventListener('change', e => {
         const file = e.target.files[0];
@@ -228,12 +265,15 @@
 
         try {
           hideError();
+          hideStatus();
           showProgress('Processing image...');
+          updateStatus('Initializing processing...');
 
           // Set cloth category filter
           const category = categorySelect.value;
           session.setClothCategory(category);
           console.log('Set cloth category to:', category);
+          updateStatus(`Setting category filter: ${category}`);
 
           // Convert image to canvas
           const canvas = document.createElement('canvas');
@@ -243,20 +283,24 @@
           ctx.drawImage(currentImage, 0, 0);
 
           showProgress('Running AI model...');
+          updateStatus('Running AI model...');
 
           // Get masks
           const masks = await session.predict(canvas);
           console.log(`Generated ${masks.length} mask(s)`);
 
           showProgress('Creating composite image...');
+          updateStatus('Creating composite image...');
 
           // Display results
           displayResults(masks, category, canvas);
 
           hideProgress();
+          hideStatus();
         } catch (err) {
           console.error('Processing error:', err);
           showError('Processing failed: ' + err.message);
+          hideStatus();
         }
       });
 

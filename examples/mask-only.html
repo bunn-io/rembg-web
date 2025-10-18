@@ -70,6 +70,24 @@
         border-radius: 5px;
         margin: 20px 0;
       }
+      .status {
+        display: none;
+        color: #6c757d;
+        font-size: 14px;
+        margin: 10px 0;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border-left: 3px solid #28a745;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+        padding: 12px 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+        border-left: 4px solid #ffc107;
+      }
     </style>
   </head>
   <body>
@@ -78,6 +96,12 @@
       This example demonstrates how to get only the mask (black/white) from
       background removal.
     </p>
+
+    <div class="warning">
+      <strong>⚠️ Data Usage Notice:</strong> First-time usage will download the
+      AI model (~200-300MB). Subsequent uses will load from cache. Please ensure
+      you have a stable internet connection and sufficient data allowance.
+    </div>
 
     <div class="info">
       <strong>Mask Only Mode:</strong> When <code>onlyMask: true</code> is set,
@@ -89,6 +113,7 @@
       <input type="file" id="fileInput" accept="image/*" />
       <button id="processBtn">Generate Mask</button>
       <div class="loading" id="loading">Generating mask...</div>
+      <div class="status" id="status"></div>
       <div class="error" id="error"></div>
     </div>
 
@@ -116,13 +141,14 @@
 
       // Configure model base URL
       rembgConfig.setBaseUrl(
-        'https://github.com/bunn-io/rembg-web/releases/download/base-models'
+        'https://huggingface.co/bunnio/dis_anime/resolve/main'
       );
 
       // Get DOM elements
       const fileInput = document.getElementById('fileInput');
       const processBtn = document.getElementById('processBtn');
       const loading = document.getElementById('loading');
+      const status = document.getElementById('status');
       const error = document.getElementById('error');
       const originalImg = document.getElementById('originalImg');
       const maskImg = document.getElementById('maskImg');
@@ -147,6 +173,17 @@
         error.style.display = 'none';
       }
 
+      // Update status message
+      function updateStatus(message) {
+        status.textContent = message;
+        status.style.display = 'block';
+      }
+
+      // Hide status message
+      function hideStatus() {
+        status.style.display = 'none';
+      }
+
       // Process the image to generate mask
       async function generateMask() {
         const file = fileInput.files[0];
@@ -158,6 +195,7 @@
         try {
           setLoading(true);
           hideError();
+          hideStatus();
 
           // Show original image
           const originalUrl = URL.createObjectURL(file);
@@ -167,6 +205,9 @@
           const maskBlob = await remove(file, {
             onlyMask: true,
             postProcessMask: true,
+            onProgress: info => {
+              updateStatus(`${info.step}: ${info.message}`);
+            },
           });
 
           // Show mask
@@ -178,6 +219,7 @@
         } catch (err) {
           console.error('Error generating mask:', err);
           showError(`Error: ${err.message}`);
+          hideStatus();
         } finally {
           setLoading(false);
         }
