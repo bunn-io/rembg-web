@@ -7,7 +7,7 @@ import {
   isWebGPUAvailable,
   getWebGPUInfo,
   logWebGPUInfo,
-  canvasTools,
+  imageUtils as canvasTools,
   rembgConfig,
   enableONNXProfiling,
 } from 'rembg-web';

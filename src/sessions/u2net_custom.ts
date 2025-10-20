@@ -1,10 +1,5 @@
-import * as ort from 'onnxruntime-web';
 import { BaseSession, SessionOptions } from './base';
-import {
-  NormalizationParams,
-  processModelOutput,
-  normalizeImage,
-} from '../utils/image';
+import { NormalizationParams } from '../utils/image';
 import { rembgConfig } from '../config';
 import { logDebug } from '../utils/logger';
 
@@ -116,7 +111,15 @@ export class U2NetCustomSession extends BaseSession {
    * Get the input tensor name for U2Net Custom
    */
   protected getInputName(): string {
-    return this.config.inputName || 'input.1';
+    if (this.config.inputName) {
+      return this.config.inputName;
+    }
+    if (this.session) {
+      // Get the first input name dynamically like Python version
+      return this.session.inputNames[0];
+    }
+    // Fallback to common input name for U2Net Custom models
+    return 'input_image';
   }
 
   /**
@@ -125,58 +128,6 @@ export class U2NetCustomSession extends BaseSession {
   protected getOutputShape(): [number, number, number, number] {
     const size = this.config.inputSize || [320, 320];
     return [1, 1, size[0], size[1]];
-  }
-
-  /**
-   * Override predict method to handle custom input tensor name
-   */
-  async predict(imageCanvas: HTMLCanvasElement): Promise<HTMLCanvasElement[]> {
-    if (!this.session) {
-      await this.initialize();
-    }
-
-    if (!this.session) {
-      throw new Error('Session not initialized');
-    }
-
-    // Normalize image for model input
-    const normalized = normalizeImage(
-      imageCanvas,
-      this.getNormalizationParams(),
-      this.getInputName()
-    );
-
-    // Run inference
-    const results = await this.session.run(normalized);
-
-    // Process outputs
-    return this.processOutputs(results, {
-      width: imageCanvas.width,
-      height: imageCanvas.height,
-    });
-  }
-
-  /**
-   * Process U2Net Custom model outputs to create masks
-   * Uses standard U2Net processing (single channel output)
-   */
-  protected processOutputs(
-    outputs: ort.InferenceSession.OnnxValueMapType,
-    originalSize: { width: number; height: number }
-  ): HTMLCanvasElement[] {
-    // U2Net Custom outputs a single tensor with shape [1, 1, height, width]
-    // Standard U2Net processing
-    const outputTensor = outputs[Object.keys(outputs)[0]] as ort.Tensor;
-    const outputData = outputTensor.data as Float32Array;
-
-    // Process the output to create mask canvas
-    const maskCanvas = processModelOutput(
-      outputData,
-      originalSize,
-      this.getOutputShape()
-    );
-
-    return [maskCanvas];
   }
 
   /**

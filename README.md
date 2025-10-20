@@ -23,12 +23,12 @@ yarn add @bunnio/rembg-web onnxruntime-web
 
 ### Use embedded:
 
-**ES Module (recommended):**
+**ES Module:**
 
 ```html
 <head>
   <!-- Load ONNX Runtime Web -->
-  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.16.3/dist/ort.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/ort.min.js"></script>
 </head>
 <body>
   <script type="module">
@@ -56,14 +56,16 @@ yarn add @bunnio/rembg-web onnxruntime-web
 </body>
 ```
 
-**UMD (Universal Module Definition):**
+**UMD:**
 
 ```html
-<!-- Load ONNX Runtime Web -->
-<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.16.3/dist/ort.min.js"></script>
-<script src="https://unpkg.com/@bunnio/rembg-web@latest/dist/index.umd.min.js"></script>
+<head>
+  <!-- Make sure to load runtimes in the header, before the scripts is called -->
+  <!-- Load ONNX Runtime Web -->
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.0/dist/ort.min.js"></script>
+  <script src="https://unpkg.com/@bunnio/rembg-web@latest/dist/index.umd.min.js"></script>
+</head>
 <script>
-
   // If you want to use the huggingface hosted model (only for dev)
   // Configure model base URL
   rembgWeb.rembgConfig.setBaseUrl(
@@ -86,9 +88,26 @@ yarn add @bunnio/rembg-web onnxruntime-web
 
 > [More Examples!!](https://bunn-io.github.io/rembg-web/examples)
 
+## Performance
+
+> Tested on a @3.87Ghz (x5687), single core runtime (no threading), no webNN or webGPU (not that it would matter. see below)
+
+<!-- prettier-ignore -->
+| Model             | Anime Example (ms)  | Car Example (ms) | Human Example (ms) | Plant Example (ms)  |
+| ----------------- | ------------        | --------------   | ------------------ | ------------------- |
+| u2netp            | 1002.34             | 916.45ms         | 961.62ms           |  1005.66ms          |
+| silueta           | 2060.13             | 2007.23ms        | 1940.59ms          |  1962.44ms          |
+| u2net_human_seg   | 2534.33             | 2723.88ms        | 2706.10ms          |  2747.44ms          |
+| u2net             | 2711.10             | 2621.96ms        | 2688.20ms          |  2521.23ms          |
+| isnet-anime       | 7120.79             | 7054.62ms        | 6975.49ms          |  7641.50ms          |
+| isnet-general-use | 7194.93             | 7064.19ms        | 7285.58ms          |  7667.17ms          |
+| u2net_cloth_seg   | 15150.91            | 14794.81ms       | 14949.86ms         |  14931.25ms         |
+
+> Results averaged over 20 "predict" runs
+
 ## Available Models
 
-u2net models, silueta, dis (general, anime)
+u2net models, silueta, DIS (isnet-general, isnet-anime)
 
 ## Not Planned
 
@@ -115,7 +134,7 @@ by default all models expect you to serve their appropriate onnx config file loc
 - /models/u2netp.onnx
 - /models/isnet-general-use.onnx
 - /models/isnet-anime.onnx
-- /models/siluetta.onnx
+- /models/silueta.onnx
 
 ...
 
@@ -129,11 +148,19 @@ The result quality is dependant on the webgl availability, so if you test it mak
 
 > see: playwright.config.ts
 
+## ⚠️ Important: webNN
+
+WebNN support is working, but on my personal testing, I saw no visible difference. This is because webNN still uses CPU.
+
+If you want to checkout how it beahves on your device, you can use "benchmark" demo.
+
 ## ⚠️ Important: webGPU
 
-I intended to add full support for webGPU, as that would make everything much faster, but alas, all models have issues with the onnx runtime, when webGPU is enabled/used.
+WebGPU support is implemented and available, but currently none of the models are compatible with WebGPU execution providers in ONNX Runtime Web.
 
-It is included, as it might get solved as time goes on, but for now, do not enable webGPU. It won't work.
+While WebGPU would provide significant performance improvements, the current model implementations require WebGL or CPU execution. WebGPU support is included for future compatibility as ONNX Runtime Web adds WebGPU support for these model types.
+
+For now, use WebGL or CPU execution providers for optimal compatibility.
 
 ## ⚠️ Important: Custom Models
 
@@ -167,6 +194,8 @@ A web-based background removal library powered by AI models. This is a TypeScrip
 - **u2net_human_seg**: Optimized for human subjects
 - **u2net_cloth_seg**: Specialized for clothing segmentation
 - **isnet-general-use**: DIS model for general use cases (higher accuracy, larger model)
+- **isnet-anime**: DIS model optimized for anime/manga style images
+- **silueta**: Silueta model for background removal
 - **u2net_custom**: Use your own custom ONNX models
 
 ## Installation
@@ -284,10 +313,16 @@ rembg-web includes a central configuration system that allows you to customize m
 import { rembgConfig } from '@bunnio/rembg-web';
 
 // Set custom model path for u2net
-rembgConfig.setModelPath('u2net', 'https://my-server.com/models/u2net.onnx');
+rembgConfig.setCustomModelPath(
+  'u2net',
+  'https://my-server.com/models/u2net.onnx'
+);
 
 // Set custom model path for u2net_human_seg
-rembgConfig.setModelPath('u2net_human_seg', '/custom/path/human_seg.onnx');
+rembgConfig.setCustomModelPath(
+  'u2net_human_seg',
+  '/custom/path/human_seg.onnx'
+);
 
 // Check if a model has a custom path
 if (rembgConfig.hasCustomPath('u2net')) {
@@ -295,7 +330,7 @@ if (rembgConfig.hasCustomPath('u2net')) {
 }
 
 // Get the current path for a model
-const u2netPath = rembgConfig.getModelPath('u2net');
+const u2netPath = rembgConfig.getCustomModelPath('u2net');
 
 // Reset all paths to defaults
 rembgConfig.resetToDefaults();
@@ -327,6 +362,48 @@ In browser environments, you can set global variables or use meta tags:
   window.REMBG_U2NET_MODEL_PATH = '/custom/path/u2net.onnx';
 </script>
 ```
+
+## Advanced Configuration
+
+### Global Settings
+
+The `rembgConfig` singleton provides advanced configuration options for logging, caching, and hardware acceleration:
+
+```typescript
+import { rembgConfig } from '@bunnio/rembg-web';
+
+// Enable detailed logging
+rembgConfig.enableGeneralLogging(true);
+rembgConfig.enablePerformanceLogging(true);
+
+// Configure cache behavior
+rembgConfig.setSessionCacheBypass(false);
+rembgConfig.setModelCacheBypass(false);
+
+// Global WebNN/WebGPU settings
+rembgConfig.enableWebNN(true);
+rembgConfig.setWebNNDeviceType('gpu');
+rembgConfig.enableWebGPU(true);
+```
+
+### Session Options
+
+Additional session options for fine-grained control:
+
+```typescript
+const session = await newSession('u2net', undefined, {
+  // Cache control
+  bypassSessionCache: false, // Force new session creation
+  bypassModelCache: false, // Force model re-download
+
+  // Progress tracking during session initialization
+  onProgress: info => {
+    console.log(`Session: ${info.step} - ${info.progress}%`);
+  },
+});
+```
+
+See [API Documentation](https://bunn-io.github.io/rembg-web/) for complete configuration options.
 
 ## API Reference
 
@@ -393,7 +470,7 @@ import {
 
 // Get available models
 const models = getAvailableModels();
-console.log(models); // ['u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg', 'isnet-general-use', 'u2net_custom']
+console.log(models); // ['u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg', 'isnet-general-use', 'isnet-anime', 'silueta', 'u2net_custom']
 
 // Clear all cached models from IndexedDB
 await clearModelCache();
@@ -440,23 +517,11 @@ Requires WebAssembly and Web Workers support.
 
 #### WebNN Support
 
-WebNN support is available in:
-
-- **Chrome 119+** (experimental, may require flag)
-- **Edge 119+** (experimental, may require flag)
-
-WebNN provides hardware acceleration using NPU, GPU, or optimized CPU execution.
+WebNN support is available (with caveats, see above,short: no difference)
 
 #### WebGPU Support
 
-WebGPU support is available in:
-
-- **Chrome 113+** (stable)
-- **Edge 113+** (stable)
-- **Firefox** (behind flag: `dom.webgpu.enabled`)
-- **Safari** (Technology Preview)
-
-WebGPU provides low-level GPU compute access for high-performance machine learning workloads.
+WebGPU support is available (with caveats, see above,short: does not work with models, will fail on execution)
 
 #### Execution Provider Priority
 
@@ -479,8 +544,8 @@ yarn build
 # Run tests
 yarn test
 
-# Start development server
-yarn test:dev
+# Start directly linked demos
+yarn test:demo
 
 # Analyze bundle size
 yarn size
@@ -488,8 +553,8 @@ yarn size
 # Check bundle size limits
 yarn analyze
 
-# Start development server for examples
-yarn examples
+# Start Docs devserver
+yarn docs:dev
 ```
 
 ## Examples
@@ -509,11 +574,11 @@ The `/examples` directory contains several HTML examples demonstrating different
 1. **Start the development server:**
 
    ```bash
-   yarn examples
+   yarn docs:dev
    ```
 
 2. **Open in browser:**
-   - Navigate to `http://localhost:8080/examples/`
+   - Navigate to `http://localhost:3000`
    - Click on any example HTML file
 
 **⚠️ Important:** Examples must be served through an HTTP server (not opened directly) to avoid CORS errors.
@@ -521,6 +586,61 @@ The `/examples` directory contains several HTML examples demonstrating different
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
+
+## Advanced Features
+
+### Model Integrity Verification
+
+Verify model integrity and validate downloads:
+
+```typescript
+import { verifyModelIntegrity, validateModel } from '@bunnio/rembg-web';
+
+// Verify model integrity
+const isValid = await verifyModelIntegrity('u2net.onnx', modelData);
+const validated = await validateModel('u2net.onnx', modelData);
+```
+
+### Cloth Segmentation Options
+
+Specialized options for clothing segmentation:
+
+```typescript
+import { U2NetClothSegSession } from '@bunnio/rembg-web';
+
+const session = new U2NetClothSegSession();
+session.setClothCategory('upper'); // 'upper' | 'lower' | 'full' | 'all'
+```
+
+### Hardware Detection
+
+Check WebNN and WebGPU availability:
+
+```typescript
+import {
+  isWebNNAvailable,
+  isWebGPUAvailable,
+  getWebNNInfo,
+} from '@bunnio/rembg-web';
+
+const webnnAvailable = isWebNNAvailable();
+const webgpuAvailable = isWebGPUAvailable();
+const webnnInfo = await getWebNNInfo();
+```
+
+### Direct Session Usage
+
+Use session classes directly for advanced control:
+
+```typescript
+import { U2NetSession, IsNetGeneralUseSession } from '@bunnio/rembg-web';
+
+const session = new U2NetSession({ preferWebNN: true });
+await session.initialize();
+const masks = await session.predict(imageCanvas);
+```
+
+See [API Documentation](https://bunn-io.github.io/rembg-web/) for complete utility functions and advanced usage.
 
 ## Troubleshooting
 

@@ -1,5 +1,5 @@
 import * as ort from 'onnxruntime-web';
-import { logInfo, logPerformance, logError } from './logger';
+import { logInfo, logPerformance, logError, logWarn } from './logger';
 
 /**
  * Parameters for image normalization used by ONNX models
@@ -46,6 +46,8 @@ export function imageToCanvas(
   if (!ctx) {
     throw new Error('Failed to get context for canvas');
   }
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   if (image instanceof HTMLImageElement) {
     canvas.width = image.naturalWidth;
@@ -122,6 +124,8 @@ export function imageDataToCanvas(imageData: ImageData): HTMLCanvasElement {
   if (!ctx) {
     throw new Error('Failed to get context for canvas');
   }
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.putImageData(imageData, 0, 0);
   return canvas;
 }
@@ -415,6 +419,139 @@ export function normalizeImage(
 }
 
 /**
+ * Normalize a mask to the 0-1 range.
+ *
+ * @param mask - The mask to normalize
+ * @param outputShape - The output shape of the model
+ * @returns The normalized mask
+ */
+export function normalizeMask(
+  mask: Float32Array,
+  outputShape: [number, number, number, number] = [1, 1, 320, 320]
+): Float32Array {
+  const [, , height, width] = outputShape;
+  // Extract the mask data
+  const extractStart = performance.now();
+  // This shouldn't be necessary
+  const maskData = mask.slice(0, height * width);
+  if (mask.length !== height * width) {
+    logWarn('[normalizeMask] Mask length does not match output shape', {
+      maskLength: mask.length,
+      outputShape: `${height}x${width}=${height * width}`,
+    });
+  }
+  const extractTime = performance.now() - extractStart;
+  logPerformance(
+    `[processModelOutput] Data extraction: ${extractTime.toFixed(2)}ms`
+  );
+
+  // Find min/max for normalization
+  const minMaxStart = performance.now();
+  let min = maskData[0];
+  let max = maskData[0];
+  for (let i = 1; i < maskData.length; i++) {
+    if (maskData[i] < min) min = maskData[i];
+    if (maskData[i] > max) max = maskData[i];
+  }
+  const minMaxTime = performance.now() - minMaxStart;
+  logPerformance(
+    `[processModelOutput] Min/max calculation: ${minMaxTime.toFixed(2)}ms (min=${min.toFixed(6)}, max=${max.toFixed(6)})`
+  );
+
+  // Normalize to 0-1 range
+  const normalizeStart = performance.now();
+  const normalized = new Float32Array(maskData.length);
+  for (let i = 0; i < maskData.length; i++) {
+    normalized[i] = (maskData[i] - min) / (max - min);
+  }
+  const normalizeTime = performance.now() - normalizeStart;
+  logPerformance(
+    `[processModelOutput] Normalization: ${normalizeTime.toFixed(2)}ms`
+  );
+
+  return normalized;
+}
+
+/**
+ * Create a grayscale mask canvas from a Float32Array.
+ *
+ * @param mask
+ * @param param1
+ * @returns
+ */
+export function createGrayScaleMask(
+  mask: Float32Array,
+  { width, height }: { width: number; height: number }
+): HTMLCanvasElement {
+  // Create canvas for mask
+  const canvasCreateStart = performance.now();
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = width;
+  maskCanvas.height = height;
+  const maskCtx = maskCanvas.getContext('2d');
+  if (!maskCtx) {
+    throw new Error('Failed to get context for mask canvas');
+  }
+  maskCtx.imageSmoothingEnabled = true;
+  maskCtx.imageSmoothingQuality = 'high';
+  const maskImageData = maskCtx.createImageData(width, height);
+
+  // Set grayscale data
+  for (let i = 0; i < mask.length; i++) {
+    const value = Math.round(mask[i] * 255);
+    const pixelIndex = i * 4;
+    maskImageData.data[pixelIndex] = value; // R
+    maskImageData.data[pixelIndex + 1] = value; // G
+    maskImageData.data[pixelIndex + 2] = value; // B
+    maskImageData.data[pixelIndex + 3] = 255; // A
+  }
+
+  maskCtx.putImageData(maskImageData, 0, 0);
+  const canvasCreateTime = performance.now() - canvasCreateStart;
+  logPerformance(
+    `[processModelOutput] Canvas creation: ${canvasCreateTime.toFixed(2)}ms`
+  );
+  return maskCanvas;
+}
+
+/**
+ * Resize a mask canvas to the original image size.
+ *
+ * @param maskCanvas
+ * @param originalSize
+ * @returns
+ */
+export function resizeMask(
+  maskCanvas: HTMLCanvasElement,
+  originalSize: { width: number; height: number }
+): HTMLCanvasElement {
+  const resizeStart = performance.now();
+  const { width, height } = maskCanvas;
+  // Resize to original image size
+  const resizedCanvas = document.createElement('canvas');
+  resizedCanvas.width = originalSize.width;
+  resizedCanvas.height = originalSize.height;
+  const resizedCtx = resizedCanvas.getContext('2d');
+  if (!resizedCtx) {
+    throw new Error('Failed to get context for resized canvas');
+  }
+  resizedCtx.imageSmoothingEnabled = true;
+  resizedCtx.imageSmoothingQuality = 'high';
+  resizedCtx.drawImage(
+    maskCanvas,
+    0,
+    0,
+    originalSize.width,
+    originalSize.height
+  );
+  const resizeTime = performance.now() - resizeStart;
+  logPerformance(
+    `[processModelOutput] Resize: ${resizeTime.toFixed(2)}ms (${width}x${height} → ${originalSize.width}x${originalSize.height})`
+  );
+  return resizedCanvas;
+}
+
+/**
  * Process ONNX model output to create mask canvas.
  *
  * Converts raw model output (Float32Array) into a grayscale mask canvas.
@@ -454,94 +591,25 @@ export function processModelOutput(
     `[processModelOutput] Processing output (${output.length} values) for ${originalSize.width}x${originalSize.height} image...`
   );
 
-  const [, , height, width] = outputShape;
+  const normalized = normalizeMask(output, outputShape);
 
-  // Extract the mask data
-  const extractStart = performance.now();
-  const maskData = output.slice(0, height * width);
-  const extractTime = performance.now() - extractStart;
-  logPerformance(
-    `[processModelOutput] Data extraction: ${extractTime.toFixed(2)}ms`
-  );
+  // Extract model output dimensions from outputShape
+  const [, , modelHeight, modelWidth] = outputShape;
 
-  // Find min/max for normalization
-  const minMaxStart = performance.now();
-  let min = maskData[0];
-  let max = maskData[0];
-  for (let i = 1; i < maskData.length; i++) {
-    if (maskData[i] < min) min = maskData[i];
-    if (maskData[i] > max) max = maskData[i];
-  }
-  const minMaxTime = performance.now() - minMaxStart;
-  logPerformance(
-    `[processModelOutput] Min/max calculation: ${minMaxTime.toFixed(2)}ms (min=${min.toFixed(6)}, max=${max.toFixed(6)})`
-  );
+  // Create mask canvas with model output dimensions
+  const grayscaleMaskCanvas = createGrayScaleMask(normalized, {
+    width: modelWidth,
+    height: modelHeight,
+  });
 
-  // Normalize to 0-1 range
-  const normalizeStart = performance.now();
-  const normalized = new Float32Array(maskData.length);
-  for (let i = 0; i < maskData.length; i++) {
-    normalized[i] = (maskData[i] - min) / (max - min);
-  }
-  const normalizeTime = performance.now() - normalizeStart;
-  logPerformance(
-    `[processModelOutput] Normalization: ${normalizeTime.toFixed(2)}ms`
-  );
-
-  // Create canvas for mask
-  const canvasCreateStart = performance.now();
-  const maskCanvas = document.createElement('canvas');
-  maskCanvas.width = width;
-  maskCanvas.height = height;
-  const maskCtx = maskCanvas.getContext('2d');
-  if (!maskCtx) {
-    throw new Error('Failed to get context for mask canvas');
-  }
-  const maskImageData = maskCtx.createImageData(width, height);
-
-  // Set grayscale data
-  for (let i = 0; i < normalized.length; i++) {
-    const value = Math.round(normalized[i] * 255);
-    const pixelIndex = i * 4;
-    maskImageData.data[pixelIndex] = value; // R
-    maskImageData.data[pixelIndex + 1] = value; // G
-    maskImageData.data[pixelIndex + 2] = value; // B
-    maskImageData.data[pixelIndex + 3] = 255; // A
-  }
-
-  maskCtx.putImageData(maskImageData, 0, 0);
-  const canvasCreateTime = performance.now() - canvasCreateStart;
-  logPerformance(
-    `[processModelOutput] Canvas creation: ${canvasCreateTime.toFixed(2)}ms`
-  );
-
-  // Resize to original image size
-  const resizeStart = performance.now();
-  const resizedCanvas = document.createElement('canvas');
-  resizedCanvas.width = originalSize.width;
-  resizedCanvas.height = originalSize.height;
-  const resizedCtx = resizedCanvas.getContext('2d');
-  if (!resizedCtx) {
-    throw new Error('Failed to get context for resized canvas');
-  }
-  resizedCtx.drawImage(
-    maskCanvas,
-    0,
-    0,
-    originalSize.width,
-    originalSize.height
-  );
-  const resizeTime = performance.now() - resizeStart;
-  logPerformance(
-    `[processModelOutput] Resize: ${resizeTime.toFixed(2)}ms (${width}x${height} → ${originalSize.width}x${originalSize.height})`
-  );
-
+  // Resize to original image dimensions
+  const resizedMaskCanvas = resizeMask(grayscaleMaskCanvas, originalSize);
   const totalTime = performance.now() - startTime;
   logPerformance(
     `[processModelOutput] Total processing: ${totalTime.toFixed(2)}ms`
   );
 
-  return resizedCanvas;
+  return resizedMaskCanvas;
 }
 
 /**
@@ -782,4 +850,39 @@ export function createMaskOnly(
 
   resultCtx.putImageData(imageData, 0, 0);
   return result;
+}
+
+export function mergeMasks(masks: Float32Array[]): Float32Array {
+  if (!masks || masks.length === 0) {
+    throw new Error('mergeMasks: no masks provided');
+  }
+
+  const expectedLength = masks[0].length;
+  for (let i = 1; i < masks.length; i++) {
+    if (masks[i].length !== expectedLength) {
+      throw new Error(
+        `mergeMasks: mask at index ${i} has different size (expected ${expectedLength}, got ${masks[i].length})`
+      );
+    }
+  }
+
+  if (masks.length === 1) {
+    return masks[0].slice();
+  }
+
+  const merged = new Float32Array(expectedLength);
+
+  // Initialize with first mask values
+  merged.set(masks[0]);
+
+  // Merge using per-pixel maximum to preserve strongest foreground
+  for (let m = 1; m < masks.length; m++) {
+    const current = masks[m];
+    for (let i = 0; i < expectedLength; i++) {
+      const v = current[i];
+      if (v > merged[i]) merged[i] = v;
+    }
+  }
+
+  return merged;
 }

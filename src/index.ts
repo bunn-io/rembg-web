@@ -1,18 +1,7 @@
 import { BaseSession } from './sessions/base';
 import { newSession } from './sessionFactory';
-import {
-  imageToCanvas,
-  canvasToBlob,
-  fileToImage,
-  arrayBufferToImage,
-  naiveCutout,
-  applyBackgroundColor,
-  postProcessMask,
-  createMaskOnly,
-  processModelOutput,
-  normalizeImage,
-} from './utils/image';
-import { logInfo, logPerformance, logError } from './utils/logger';
+import * as imageUtils from './utils/image';
+import { logInfo, logPerformance } from './utils/logger';
 
 export interface ProgressInfo {
   /** Current step being executed */
@@ -102,7 +91,7 @@ export async function remove(
       logInfo('[remove] Input is already a canvas');
     } else if (data instanceof HTMLImageElement) {
       const canvasStart = performance.now();
-      inputCanvas = imageToCanvas(data);
+      inputCanvas = imageUtils.imageToCanvas(data);
       const canvasTime = performance.now() - canvasStart;
       logPerformance(
         `[remove] Image to canvas conversion: ${canvasTime.toFixed(2)}ms`
@@ -111,14 +100,14 @@ export async function remove(
     } else if (data instanceof File || data instanceof Blob) {
       emitProgress('downloading', 10, 'Loading image...');
       const fileStart = performance.now();
-      const image = await fileToImage(data);
+      const image = await imageUtils.fileToImage(data);
       const fileTime = performance.now() - fileStart;
       logPerformance(
         `[remove] File to image conversion: ${fileTime.toFixed(2)}ms`
       );
 
       const canvasStart = performance.now();
-      inputCanvas = imageToCanvas(image);
+      inputCanvas = imageUtils.imageToCanvas(image);
       const canvasTime = performance.now() - canvasStart;
       logPerformance(
         `[remove] Image to canvas conversion: ${canvasTime.toFixed(2)}ms`
@@ -127,14 +116,14 @@ export async function remove(
     } else if (data instanceof ArrayBuffer) {
       emitProgress('downloading', 10, 'Loading image...');
       const bufferStart = performance.now();
-      const image = await arrayBufferToImage(data);
+      const image = await imageUtils.arrayBufferToImage(data);
       const bufferTime = performance.now() - bufferStart;
       logPerformance(
         `[remove] ArrayBuffer to image conversion: ${bufferTime.toFixed(2)}ms`
       );
 
       const canvasStart = performance.now();
-      inputCanvas = imageToCanvas(image);
+      inputCanvas = imageUtils.imageToCanvas(image);
       const canvasTime = performance.now() - canvasStart;
       logPerformance(
         `[remove] Image to canvas conversion: ${canvasTime.toFixed(2)}ms`
@@ -177,7 +166,7 @@ export async function remove(
     if (options.postProcessMask) {
       const postProcessStart = performance.now();
       emitProgress('postprocessing', 80, 'Applying post-processing...');
-      mask = postProcessMask(mask);
+      mask = imageUtils.postProcessMask(mask);
       const postProcessTime = performance.now() - postProcessStart;
       logPerformance(
         `[remove] Post-processing: ${postProcessTime.toFixed(2)}ms`
@@ -188,14 +177,14 @@ export async function remove(
     if (options.onlyMask) {
       const maskOnlyStart = performance.now();
       emitProgress('postprocessing', 90, 'Creating mask output...');
-      const maskOnly = createMaskOnly(mask);
+      const maskOnly = imageUtils.createMaskOnly(mask);
       const maskOnlyTime = performance.now() - maskOnlyStart;
       logPerformance(
         `[remove] Mask-only creation: ${maskOnlyTime.toFixed(2)}ms`
       );
 
       const blobStart = performance.now();
-      const blob = await canvasToBlob(maskOnly, 'image/png');
+      const blob = await imageUtils.canvasToBlob(maskOnly, 'image/png');
       const blobTime = performance.now() - blobStart;
       logPerformance(
         `[remove] Canvas to blob conversion: ${blobTime.toFixed(2)}ms`
@@ -212,7 +201,7 @@ export async function remove(
     // Create cutout
     const cutoutStart = performance.now();
     emitProgress('postprocessing', 85, 'Creating cutout...');
-    let result = naiveCutout(inputCanvas, mask);
+    let result = imageUtils.naiveCutout(inputCanvas, mask);
     const cutoutTime = performance.now() - cutoutStart;
     logPerformance(`[remove] Cutout creation: ${cutoutTime.toFixed(2)}ms`);
 
@@ -220,7 +209,7 @@ export async function remove(
     if (options.bgcolor) {
       const bgColorStart = performance.now();
       emitProgress('postprocessing', 90, 'Applying background color...');
-      result = applyBackgroundColor(result, options.bgcolor);
+      result = imageUtils.applyBackgroundColor(result, options.bgcolor);
       const bgColorTime = performance.now() - bgColorStart;
       logPerformance(
         `[remove] Background color application: ${bgColorTime.toFixed(2)}ms`
@@ -230,7 +219,7 @@ export async function remove(
     // Convert to blob and return
     const finalBlobStart = performance.now();
     emitProgress('postprocessing', 95, 'Finalizing output...');
-    const blob = await canvasToBlob(result, 'image/png');
+    const blob = await imageUtils.canvasToBlob(result, 'image/png');
     const finalBlobTime = performance.now() - finalBlobStart;
     logPerformance(
       `[remove] Final canvas to blob conversion: ${finalBlobTime.toFixed(2)}ms`
@@ -319,7 +308,7 @@ export async function removeToCanvas(
       logInfo('[removeToCanvas] Input is already a canvas');
     } else if (data instanceof HTMLImageElement) {
       const canvasStart = performance.now();
-      inputCanvas = imageToCanvas(data);
+      inputCanvas = imageUtils.imageToCanvas(data);
       const canvasTime = performance.now() - canvasStart;
       logPerformance(
         `[removeToCanvas] Image to canvas conversion: ${canvasTime.toFixed(2)}ms`
@@ -328,14 +317,14 @@ export async function removeToCanvas(
     } else if (data instanceof File || data instanceof Blob) {
       emitProgress('downloading', 10, 'Loading image...');
       const fileStart = performance.now();
-      const image = await fileToImage(data);
+      const image = await imageUtils.fileToImage(data);
       const fileTime = performance.now() - fileStart;
       logPerformance(
         `[removeToCanvas] File to image conversion: ${fileTime.toFixed(2)}ms`
       );
 
       const canvasStart = performance.now();
-      inputCanvas = imageToCanvas(image);
+      inputCanvas = imageUtils.imageToCanvas(image);
       const canvasTime = performance.now() - canvasStart;
       logPerformance(
         `[removeToCanvas] Image to canvas conversion: ${canvasTime.toFixed(2)}ms`
@@ -344,14 +333,14 @@ export async function removeToCanvas(
     } else if (data instanceof ArrayBuffer) {
       emitProgress('downloading', 10, 'Loading image...');
       const bufferStart = performance.now();
-      const image = await arrayBufferToImage(data);
+      const image = await imageUtils.arrayBufferToImage(data);
       const bufferTime = performance.now() - bufferStart;
       logPerformance(
         `[removeToCanvas] ArrayBuffer to image conversion: ${bufferTime.toFixed(2)}ms`
       );
 
       const canvasStart = performance.now();
-      inputCanvas = imageToCanvas(image);
+      inputCanvas = imageUtils.imageToCanvas(image);
       const canvasTime = performance.now() - canvasStart;
       logPerformance(
         `[removeToCanvas] Image to canvas conversion: ${canvasTime.toFixed(2)}ms`
@@ -398,7 +387,7 @@ export async function removeToCanvas(
     if (options.postProcessMask) {
       const postProcessStart = performance.now();
       emitProgress('postprocessing', 80, 'Applying post-processing...');
-      mask = postProcessMask(mask);
+      mask = imageUtils.postProcessMask(mask);
       const postProcessTime = performance.now() - postProcessStart;
       logPerformance(
         `[removeToCanvas] Post-processing: ${postProcessTime.toFixed(2)}ms`
@@ -409,7 +398,7 @@ export async function removeToCanvas(
     if (options.onlyMask) {
       const maskOnlyStart = performance.now();
       emitProgress('postprocessing', 90, 'Creating mask output...');
-      const result = createMaskOnly(mask);
+      const result = imageUtils.createMaskOnly(mask);
       const maskOnlyTime = performance.now() - maskOnlyStart;
       logPerformance(
         `[removeToCanvas] Mask-only creation: ${maskOnlyTime.toFixed(2)}ms`
@@ -426,7 +415,7 @@ export async function removeToCanvas(
     // Create cutout
     const cutoutStart = performance.now();
     emitProgress('postprocessing', 85, 'Creating cutout...');
-    let result = naiveCutout(inputCanvas, mask);
+    let result = imageUtils.naiveCutout(inputCanvas, mask);
     const cutoutTime = performance.now() - cutoutStart;
     logPerformance(
       `[removeToCanvas] Cutout creation: ${cutoutTime.toFixed(2)}ms`
@@ -436,7 +425,7 @@ export async function removeToCanvas(
     if (options.bgcolor) {
       const bgColorStart = performance.now();
       emitProgress('postprocessing', 90, 'Applying background color...');
-      result = applyBackgroundColor(result, options.bgcolor);
+      result = imageUtils.applyBackgroundColor(result, options.bgcolor);
       const bgColorTime = performance.now() - bgColorStart;
       logPerformance(
         `[removeToCanvas] Background color application: ${bgColorTime.toFixed(2)}ms`
@@ -470,54 +459,7 @@ export async function removeToCanvas(
   }
 }
 
-/**
- * Apply a raw mask to a source canvas to create a cutout.
- * Does not change the source canvas.
- *
- * This function processes a raw Float32Array mask from a model and applies it
- * to the original canvas to create a background-removed cutout.
- *
- * @param rawMask - Raw mask data as Float32Array from model output
- * @param sourceCanvas - Original input canvas to apply the mask to
- * @returns HTMLCanvasElement with background removed using the mask
- */
-function applyRawMask(
-  rawMask: Float32Array,
-  sourceCanvas: HTMLCanvasElement
-): HTMLCanvasElement {
-  const result = processModelOutput(rawMask, {
-    width: sourceCanvas.width,
-    height: sourceCanvas.height,
-  });
-  const cutout = naiveCutout(sourceCanvas, result);
-  return cutout;
-}
-
-/**
- * Merge multiple masks into a single combined mask.
- *
- * This function combines multiple Float32Array masks by taking the maximum
- * value at each pixel position. This is useful when you have multiple
- * model outputs that need to be combined into a single mask.
- *
- * @param masks - Array of Float32Array masks to merge
- * @returns Float32Array representing the combined mask
- */
-function mergeMasks(masks: Float32Array[]): Float32Array {
-  const combinedMask = new Float32Array(masks[0].length);
-  for (let i = 0; i < masks[0].length; i++) {
-    combinedMask[i] = masks[0][i];
-    for (let j = 1; j < masks.length; j++) {
-      combinedMask[i] = Math.max(combinedMask[i], masks[j][i]);
-    }
-  }
-  return combinedMask;
-}
-
-export const results = {
-  applyRawMask,
-  mergeMasks,
-};
+export { imageUtils };
 
 /**
  * Create a new session for the specified model.
@@ -666,19 +608,6 @@ export {
   isONNXProfilingEnabled,
 } from './utils/logger';
 
-const canvasTools = {
-  imageToCanvas,
-  canvasToBlob,
-  fileToImage,
-  arrayBufferToImage,
-  naiveCutout,
-  applyBackgroundColor,
-  postProcessMask,
-  createMaskOnly,
-  processModelOutput,
-  normalizeImage,
-};
-export { canvasTools };
 // Export integrity utilities
 export {
   verifyModelIntegrity,
@@ -710,5 +639,12 @@ export {
   logWebGPUInfo,
 } from './utils/webgpu';
 
-const version = '1.0.0';
+import { SESSIONS } from './sessionFactory';
+
+const rawSessions = SESSIONS;
+export { rawSessions };
+
+import packageJson from '../package.json';
+
+const version = packageJson.version;
 export { version };

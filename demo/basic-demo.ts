@@ -12,6 +12,7 @@ const originalImg = document.getElementById('originalImg') as HTMLImageElement;
 const processedImg = document.getElementById(
   'processedImg'
 ) as HTMLImageElement;
+const progressText = document.getElementById('progressText') as HTMLDivElement;
 const onnxProfilingCheckbox = document.getElementById(
   'onnxProfiling'
 ) as HTMLInputElement;
@@ -19,8 +20,10 @@ const onnxProfilingCheckbox = document.getElementById(
 // Show/hide loading state
 function setLoading(isLoading: boolean) {
   loading.style.display = isLoading ? 'block' : 'none';
-  processBtn.disabled = isLoading;
-  processBtn.textContent = isLoading ? 'Processing...' : 'Process Image';
+  if (processBtn) {
+    processBtn.disabled = isLoading;
+    processBtn.textContent = isLoading ? 'Processing...' : 'Process Image';
+  }
 }
 
 // Show error message
@@ -51,8 +54,15 @@ async function processImage() {
     const imageBlob = await response.blob();
     console.log('Image fetched, size:', imageBlob.size);
 
+    // Set the original image
+    const originalUrl = URL.createObjectURL(imageBlob);
+    originalImg.src = originalUrl;
+
     // Test if model is accessible
     console.log('Testing model accessibility...');
+    if (progressText) {
+      progressText.textContent = 'Testing model accessibility...';
+    }
     try {
       const modelResponse = await fetch('/models/u2net.onnx');
       console.log('Model response status:', modelResponse.status);
@@ -72,6 +82,10 @@ async function processImage() {
     console.log('Image blob type:', imageBlob.type);
     console.log('Image blob size:', imageBlob.size);
 
+    if (progressText) {
+      progressText.textContent = 'Processing image with AI model...';
+    }
+
     try {
       const processedBlob = await remove(imageBlob, {
         postProcessMask: true,
@@ -81,6 +95,10 @@ async function processImage() {
       // Create object URL for the processed image
       const processedUrl = URL.createObjectURL(processedBlob);
       processedImg.src = processedUrl;
+
+      if (progressText) {
+        progressText.textContent = 'Processing complete!';
+      }
 
       console.log('Demo completed successfully!');
     } catch (removeError) {
@@ -96,7 +114,9 @@ async function processImage() {
 }
 
 // Add click event listener to the process button
-processBtn.addEventListener('click', processImage);
+if (processBtn) {
+  processBtn.addEventListener('click', processImage);
+}
 
 // Add event listener for ONNX profiling checkbox
 if (onnxProfilingCheckbox) {

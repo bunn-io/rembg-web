@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.2] - 2025-10-20
+
+### Added
+
+- Exported new `SESSIONS` object that groups all available session classes for easier access
+- New `@Performance` and `@PerformanceSync` decorators to automatically log execution time of async and sync functions
+- New examples:
+  - `examples/model-selection.html`: Demonstrates selecting between 7 different AI models with use case guidance
+  - `examples/batch-processing.html`: Shows multi-image processing with ZIP download and performance statistics
+- Display of original image in `basic-demo.html` before processing
+- "Process Image" button to `basic-demo.html` for enhanced functionality demonstration
+- Real-time progress updates during image processing in the demo
+- Enabled JSON file imports in Rollup build via `@rollup/plugin-json`
+- Enabled experimental decorators in `tsconfig.json`
+
+### Changed
+
+- **BREAKING**: `newSession` is now asynchronous and requires `await`
+- Refactored `canvasTools` to `imageUtils` (with `canvasTools` as alias for backward compatibility)
+- Removed `processOutputs` method from `IsNetGeneralUseSession`, delegating output handling to higher level
+- Improved code formatting for error logging in `verifyModelIntegrity` function
+- Improved code formatting for WebNN utility logging functions
+- Improved robustness of demo with null checks for DOM elements (`processBtn`)
+- Improved `BaseSession` by splitting initialization and predict runtimes
+- All `predict` components are now individually callable
+- Removed duplications, all sessions now use the same image utils to transfer data between formats
+- Streamlined the whole prediction flow by extracting input creation, output parsing, and mask creation
+
 ## [1.0.1] - 2025-10-18
 
 ### Added

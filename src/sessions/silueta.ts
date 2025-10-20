@@ -1,6 +1,5 @@
-import * as ort from 'onnxruntime-web';
 import { BaseSession, SessionOptions } from './base';
-import { NormalizationParams, processModelOutput } from '../utils/image';
+import { NormalizationParams } from '../utils/image';
 import { rembgConfig } from '../config';
 
 /**
@@ -56,7 +55,12 @@ export class SiluetaSession extends BaseSession {
    * Get the input tensor name for Silueta
    */
   protected getInputName(): string {
-    return 'input.1';
+    if (this.session) {
+      // Get the first input name dynamically like Python version
+      return this.session.inputNames[0];
+    }
+    // Fallback to common input name for Silueta models
+    return 'input_image';
   }
 
   /**
@@ -64,27 +68,6 @@ export class SiluetaSession extends BaseSession {
    */
   protected getOutputShape(): [number, number, number, number] {
     return [1, 1, 320, 320];
-  }
-
-  /**
-   * Process Silueta model outputs to create masks
-   */
-  protected processOutputs(
-    outputs: ort.InferenceSession.OnnxValueMapType,
-    originalSize: { width: number; height: number }
-  ): HTMLCanvasElement[] {
-    // Silueta outputs a single tensor with shape [1, 1, 320, 320]
-    const outputTensor = outputs[Object.keys(outputs)[0]] as ort.Tensor;
-    const outputData = outputTensor.data as Float32Array;
-
-    // Process the output to create mask canvas
-    const maskCanvas = processModelOutput(
-      outputData,
-      originalSize,
-      this.getOutputShape()
-    );
-
-    return [maskCanvas];
   }
 
   /**

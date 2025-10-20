@@ -1,6 +1,6 @@
 {
   "name": "@bunnio/rembg-web",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Shameless copy of danielgatis/rembg, but for the web. 90% organic GMO free AI generated code.",
   "type": "module",
   "main": "dist/index.js",
@@ -44,8 +44,11 @@
     "build:min": "tsc && terser dist/index.js -o dist/index.min.js --compress --mangle",
     "build:prod": "yarn build && yarn build:min",
     "fetch-models": "tsx scripts/fetch-models.ts",
+    "docs:dev": "concurrently \"yarn docs:serve\" \"yarn docs:build:watch\" \"yarn docs:build-pages:watch\" ",
     "docs:build": "typedoc",
+    "docs:build:watch": "chokidar \"src/**/*\" -c \"yarn docs:build\"",
     "docs:build-pages": "tsx scripts/build-docs.ts",
+    "docs:build-pages:watch": "chokidar \"examples/**/*\" -c \"tsx scripts/build-docs.ts\"",
     "docs:serve": "cd docs-site && http-server -p 3000 -o",
     "publish:dry": "npm publish --dry-run",
     "publish:beta": "npm publish --tag beta",
@@ -88,7 +91,9 @@
   "devDependencies": {
     "@playwright/test": "^1.56.0",
     "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-replace": "^6.0.2",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.0",
     "@types/jsdom": "^27.0.0",
@@ -98,6 +103,7 @@
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "@vitest/ui": "^3.2.4",
+    "concurrently": "^9.2.1",
     "eslint": "^8.0.0",
     "fake-indexeddb": "^6.2.3",
     "http-server": "^14.1.1",
@@ -113,7 +119,8 @@
     "typescript": "^5.0.0",
     "vite": "^7.1.9",
     "vitest": "^3.2.4",
-    "vitest-canvas-mock": "^0.3.3"
+    "vitest-canvas-mock": "^0.3.3",
+    "chokidar-cli": "^3.0.0"
   },
   "engines": {
     "node": ">=16.0.0"

@@ -3,6 +3,7 @@ import typescript from '@rollup/plugin-typescript';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
+import json from '@rollup/plugin-json';
 
 export default defineConfig([
   // ES Module build (tree-shakeable)
@@ -14,6 +15,7 @@ export default defineConfig([
       sourcemap: true,
     },
     plugins: [
+      json(),
       typescript({
         declaration: true,
         declarationDir: 'dist',
@@ -41,6 +43,7 @@ export default defineConfig([
       },
     },
     plugins: [
+      json(),
       typescript({
         declaration: false,
         sourceMap: true,
@@ -72,6 +75,7 @@ export default defineConfig([
       },
     },
     plugins: [
+      json(),
       typescript({
         declaration: false,
         sourceMap: true,

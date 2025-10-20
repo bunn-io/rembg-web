@@ -25,6 +25,16 @@ sessionRegistry.set('isnet-general-use', IsNetGeneralUseSession);
 sessionRegistry.set('isnet-anime', IsNetAnimeSession);
 sessionRegistry.set('silueta', SiluetaSession);
 
+export const SESSIONS = {
+  U2NetSession,
+  U2NetpSession,
+  U2NetHumanSegSession,
+  U2NetClothSegSession,
+  IsNetGeneralUseSession,
+  IsNetAnimeSession,
+  SiluetaSession,
+} as const;
+
 // Cache for initialized sessions with LRU tracking
 const sessionCache: Map<string, BaseSession> = new Map();
 const sessionAccessOrder: string[] = []; // Track access order for LRU

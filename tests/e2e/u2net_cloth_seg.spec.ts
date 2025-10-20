@@ -25,15 +25,15 @@ test.describe(`${MODEL_NAME} model`, () => {
           )) as U2NetClothSegSession;
           session.setClothCategory('all');
           const imageBlob = await response.blob();
-          const image = await window.rembg.canvasTools.fileToImage(imageBlob);
-          const canvas = window.rembg.canvasTools.imageToCanvas(image);
+          const image = await window.rembg.imageUtils.fileToImage(imageBlob);
+          const canvas = window.rembg.imageUtils.imageToCanvas(image);
           const masks = await session.predict(canvas);
           const canvases: HTMLCanvasElement[] = [];
           for (let mask of masks) {
-            mask = window.rembg.canvasTools.postProcessMask(mask);
-            const image = await window.rembg.canvasTools.fileToImage(imageBlob);
-            const canvas = window.rembg.canvasTools.imageToCanvas(image);
-            canvases.push(window.rembg.canvasTools.naiveCutout(canvas, mask));
+            mask = window.rembg.imageUtils.postProcessMask(mask);
+            const image = await window.rembg.imageUtils.fileToImage(imageBlob);
+            const canvas = window.rembg.imageUtils.imageToCanvas(image);
+            canvases.push(window.rembg.imageUtils.naiveCutout(canvas, mask));
           }
           // Merge canvases vertically into one
           if (canvases.length === 0) throw new Error('No cutouts to merge');

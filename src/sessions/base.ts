@@ -1,5 +1,9 @@
 import * as ort from 'onnxruntime-web';
-import { normalizeImage, NormalizationParams } from '../utils/image';
+import {
+  normalizeImage,
+  NormalizationParams,
+  processModelOutput,
+} from '../utils/image';
 import { rembgConfig } from '../config';
 import { validateModel } from '../utils/integrity';
 import {
@@ -14,6 +18,8 @@ import {
   logWarn,
   logError,
   logDebug,
+  Performance,
+  PerformanceSync,
 } from '../utils/logger';
 
 /**
@@ -134,7 +140,11 @@ export abstract class BaseSession {
     // Configure ONNX Runtime with these options
     configureONNXRuntime(this.options);
   }
-
+  private emitProgress(step: string, progress: number, message: string): void {
+    if (this.options.onProgress) {
+      this.options.onProgress({ step, progress, message });
+    }
+  }
   /**
    * Initialize the ONNX session
    *
@@ -142,17 +152,36 @@ export abstract class BaseSession {
    * ONNX Runtime will collect profiling data for each inference run.
    * Profiling data is automatically outputted to the console after each inference.
    */
+  @Performance()
   async initialize(): Promise<void> {
-    const initStartTime = performance.now();
     logInfo(`[${this.modelName}] Starting session initialization...`);
-
+    this.emitProgress('initializing', 0, 'Starting session initialization...');
     if (this.session) {
       logInfo(`[${this.modelName}] Session already initialized, skipping`);
+      this.emitProgress(
+        'initializing',
+        100,
+        'Session already initialized, skipping'
+      );
       return; // Already initialized
     }
 
-    // Validate WebNN and WebGPU configuration if provided
-    const configValidationStart = performance.now();
+    this.emitProgress('initializing', 20, 'Validating configuration...');
+    await this.validateConfiguration();
+    this.emitProgress('initializing', 50, 'Downloading model...');
+    this.modelData = await this.downloadModel();
+    this.emitProgress('initializing', 60, 'Setting up execution providers...');
+    const executionProviders = await this.setupExecutionProviders();
+    this.emitProgress('initializing', 80, 'Creating session...');
+    await this.createSession(executionProviders);
+    this.emitProgress('initializing', 100, 'Session initialized successfully');
+  }
+
+  /**
+   * Validate WebNN and WebGPU configuration
+   */
+  @Performance()
+  private async validateConfiguration(): Promise<void> {
     if (!validateWebNNConfig(this.options)) {
       logWarn('Invalid WebNN configuration, falling back to default providers');
     }
@@ -161,26 +190,14 @@ export abstract class BaseSession {
         'Invalid WebGPU configuration, falling back to default providers'
       );
     }
-    const configValidationTime = performance.now() - configValidationStart;
-    logPerformance(
-      `[${this.modelName}] Config validation: ${configValidationTime.toFixed(2)}ms`
-    );
+  }
 
-    // Download model if not cached
-    const modelDownloadStart = performance.now();
-    this.modelData = await this.downloadModel();
-    const modelDownloadTime = performance.now() - modelDownloadStart;
-    logPerformance(
-      `[${this.modelName}] Model download: ${modelDownloadTime.toFixed(2)}ms`
-    );
-
-    // Get execution providers with WebNN support
-    const providerSetupStart = performance.now();
+  /**
+   * Setup execution providers and log availability
+   */
+  @Performance()
+  private async setupExecutionProviders(): Promise<string[]> {
     const executionProviders = getExecutionProviders(this.options);
-    const providerSetupTime = performance.now() - providerSetupStart;
-    logPerformance(
-      `[${this.modelName}] Provider setup: ${providerSetupTime.toFixed(2)}ms`
-    );
 
     // Log WebNN and WebGPU availability for debugging
     if (this.options.preferWebNN) {
@@ -202,13 +219,22 @@ export abstract class BaseSession {
       }
     }
 
-    // Create ONNX session with fallback logic
-    const sessionCreationStart = performance.now();
+    return executionProviders;
+  }
+
+  /**
+   * Create ONNX session with fallback logic
+   */
+  @Performance()
+  private async createSession(executionProviders: string[]): Promise<void> {
     let sessionCreated = false;
     let lastError: Error | null = null;
 
+    if (!this.modelData) {
+      throw new Error('Model data not found');
+    }
+
     for (const provider of executionProviders) {
-      const providerStart = performance.now();
       try {
         logInfo(
           `[${this.modelName}] Attempting to create session with provider: ${provider}`
@@ -217,9 +243,8 @@ export abstract class BaseSession {
           executionProviders: [provider],
           enableProfiling: rembgConfig.isONNXProfilingEnabled(),
         });
-        const providerTime = performance.now() - providerStart;
         logPerformance(
-          `[${this.modelName}] Successfully created session with provider: ${provider} (${providerTime.toFixed(2)}ms)`
+          `[${this.modelName}] Successfully created session with provider: ${provider}`
         );
         if (rembgConfig.isONNXProfilingEnabled()) {
           logInfo(
@@ -229,9 +254,8 @@ export abstract class BaseSession {
         sessionCreated = true;
         break;
       } catch (error) {
-        const providerTime = performance.now() - providerStart;
         logWarn(
-          `[${this.modelName}] Failed to create session with provider '${provider}' (${providerTime.toFixed(2)}ms):`,
+          `[${this.modelName}] Failed to create session with provider '${provider}':`,
           error
         );
         lastError = error as Error;
@@ -239,60 +263,34 @@ export abstract class BaseSession {
       }
     }
 
-    const sessionCreationTime = performance.now() - sessionCreationStart;
-    logPerformance(
-      `[${this.modelName}] Total session creation: ${sessionCreationTime.toFixed(2)}ms`
-    );
-
     if (!sessionCreated) {
       throw new Error(
         `Failed to create ONNX session with any provider. Last error: ${lastError?.message || 'Unknown error'}`
       );
     }
-
-    const totalInitTime = performance.now() - initStartTime;
-    logPerformance(
-      `[${this.modelName}] Session initialization complete: ${totalInitTime.toFixed(2)}ms`
-    );
   }
 
   /**
    * Download model file with IndexedDB caching
    */
+  @Performance()
   protected async downloadModel(): Promise<ArrayBuffer> {
-    const downloadStartTime = performance.now();
     logInfo(`[${this.modelName}] Starting model download...`);
 
-    const emitProgress = (step: string, progress: number, message: string) => {
-      if (this.options.onProgress) {
-        this.options.onProgress({ step, progress, message });
-      }
-    };
-
     // Check IndexedDB cache first (unless bypassed)
-    const cacheCheckStart = performance.now();
     if (!this.options.bypassModelCache) {
       try {
-        emitProgress('downloading', 10, 'Checking cache...');
+        this.emitProgress('downloading', 10, 'Checking cache...');
         const cachedModel = await this.getCachedModel();
-        const cacheCheckTime = performance.now() - cacheCheckStart;
-        logPerformance(
-          `[${this.modelName}] Cache check: ${cacheCheckTime.toFixed(2)}ms`
-        );
 
         if (cachedModel) {
           logInfo(`[${this.modelName}] Using cached model: ${this.modelName}`);
-          emitProgress('downloading', 100, 'Using cached model');
-          const totalTime = performance.now() - downloadStartTime;
-          logPerformance(
-            `[${this.modelName}] Model download complete (cached): ${totalTime.toFixed(2)}ms`
-          );
+          this.emitProgress('downloading', 100, 'Using cached model');
           return cachedModel;
         }
       } catch (error) {
-        const cacheCheckTime = performance.now() - cacheCheckStart;
         logWarn(
-          `[${this.modelName}] IndexedDB cache unavailable (${cacheCheckTime.toFixed(2)}ms), falling back to direct download:`,
+          `[${this.modelName}] IndexedDB cache unavailable, falling back to direct download:`,
           error
         );
       }
@@ -305,15 +303,10 @@ export abstract class BaseSession {
     // Download model
     logInfo(`[${this.modelName}] Downloading model: ${this.modelName}`);
     const modelUrl = this.getModelUrl();
-    emitProgress('downloading', 20, 'Starting download...');
+    this.emitProgress('downloading', 20, 'Starting download...');
 
-    const fetchStart = performance.now();
     try {
       const response = await fetch(modelUrl);
-      const fetchTime = performance.now() - fetchStart;
-      logPerformance(
-        `[${this.modelName}] Fetch response: ${fetchTime.toFixed(2)}ms`
-      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -326,11 +319,10 @@ export abstract class BaseSession {
       );
 
       if (total > 0) {
-        emitProgress('downloading', 30, 'Downloading model...');
+        this.emitProgress('downloading', 30, 'Downloading model...');
 
         const reader = response.body?.getReader();
         if (reader) {
-          const streamingStart = performance.now();
           const chunks: Uint8Array[] = [];
           let received = 0;
 
@@ -345,40 +337,25 @@ export abstract class BaseSession {
             received += value.length;
 
             const progress = 30 + Math.round((received / total) * 60);
-            emitProgress(
+            this.emitProgress(
               'downloading',
               progress,
               `Downloading model... ${Math.round((received / total) * 100)}%`
             );
           }
 
-          const streamingTime = performance.now() - streamingStart;
-          logPerformance(
-            `[${this.modelName}] Streaming download: ${streamingTime.toFixed(2)}ms`
-          );
-
-          const assemblyStart = performance.now();
           const modelData = new Uint8Array(received);
           let position = 0;
           for (const chunk of chunks) {
             modelData.set(chunk, position);
             position += chunk.length;
           }
-          const assemblyTime = performance.now() - assemblyStart;
-          logPerformance(
-            `[${this.modelName}] Data assembly: ${assemblyTime.toFixed(2)}ms`
-          );
 
-          emitProgress('downloading', 90, 'Download complete');
+          this.emitProgress('downloading', 90, 'Download complete');
 
           // Validate model integrity
-          const validationStart = performance.now();
-          emitProgress('downloading', 95, 'Validating model...');
+          this.emitProgress('downloading', 95, 'Validating model...');
           const isValid = await validateModel(this.modelName, modelData.buffer);
-          const validationTime = performance.now() - validationStart;
-          logPerformance(
-            `[${this.modelName}] Model validation: ${validationTime.toFixed(2)}ms`
-          );
 
           if (!isValid) {
             throw new Error(
@@ -387,49 +364,29 @@ export abstract class BaseSession {
           }
 
           // Try to cache the model, but don't fail if IndexedDB is unavailable
-          const cacheStart = performance.now();
           try {
             await this.cacheModel(modelData.buffer);
-            const cacheTime = performance.now() - cacheStart;
-            logPerformance(
-              `[${this.modelName}] Model cached: ${cacheTime.toFixed(2)}ms`
-            );
           } catch (cacheError) {
-            const cacheTime = performance.now() - cacheStart;
             logWarn(
-              `[${this.modelName}] Failed to cache model (${cacheTime.toFixed(2)}ms), but download succeeded:`,
+              `[${this.modelName}] Failed to cache model, but download succeeded:`,
               cacheError
             );
           }
 
-          emitProgress('downloading', 100, 'Model ready');
-          const totalTime = performance.now() - downloadStartTime;
-          logPerformance(
-            `[${this.modelName}] Model download complete (streaming): ${totalTime.toFixed(2)}ms`
-          );
+          this.emitProgress('downloading', 100, 'Model ready');
           return modelData.buffer;
         }
       }
 
       // Fallback to simple download if streaming is not available
-      const simpleDownloadStart = performance.now();
-      emitProgress('downloading', 50, 'Downloading model...');
+      this.emitProgress('downloading', 50, 'Downloading model...');
       const modelData = await response.arrayBuffer();
-      const simpleDownloadTime = performance.now() - simpleDownloadStart;
-      logPerformance(
-        `[${this.modelName}] Simple download: ${simpleDownloadTime.toFixed(2)}ms`
-      );
 
-      emitProgress('downloading', 90, 'Download complete');
+      this.emitProgress('downloading', 90, 'Download complete');
 
       // Validate model integrity
-      const validationStart = performance.now();
-      emitProgress('downloading', 95, 'Validating model...');
+      this.emitProgress('downloading', 95, 'Validating model...');
       const isValid = await validateModel(this.modelName, modelData);
-      const validationTime = performance.now() - validationStart;
-      logPerformance(
-        `[${this.modelName}] Model validation: ${validationTime.toFixed(2)}ms`
-      );
 
       if (!isValid) {
         throw new Error(
@@ -438,33 +395,19 @@ export abstract class BaseSession {
       }
 
       // Try to cache the model, but don't fail if IndexedDB is unavailable
-      const cacheStart = performance.now();
       try {
         await this.cacheModel(modelData);
-        const cacheTime = performance.now() - cacheStart;
-        logPerformance(
-          `[${this.modelName}] Model cached: ${cacheTime.toFixed(2)}ms`
-        );
       } catch (cacheError) {
-        const cacheTime = performance.now() - cacheStart;
         logWarn(
-          `[${this.modelName}] Failed to cache model (${cacheTime.toFixed(2)}ms), but download succeeded:`,
+          `[${this.modelName}] Failed to cache model, but download succeeded:`,
           cacheError
         );
       }
 
-      emitProgress('downloading', 100, 'Model ready');
-      const totalTime = performance.now() - downloadStartTime;
-      logPerformance(
-        `[${this.modelName}] Model download complete (simple): ${totalTime.toFixed(2)}ms`
-      );
+      this.emitProgress('downloading', 100, 'Model ready');
       return modelData;
     } catch (error) {
-      const totalTime = performance.now() - downloadStartTime;
-      logError(
-        `[${this.modelName}] Model download failed (${totalTime.toFixed(2)}ms):`,
-        error
-      );
+      logError(`[${this.modelName}] Model download failed:`, error);
       throw new Error(`Failed to download model ${this.modelName}: ${error}`);
     }
   }
@@ -472,6 +415,7 @@ export abstract class BaseSession {
   /**
    * Get cached model from IndexedDB
    */
+  @Performance()
   private async getCachedModel(): Promise<ArrayBuffer | null> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open('rembg-models', 2);
@@ -524,6 +468,7 @@ export abstract class BaseSession {
   /**
    * Cache model in IndexedDB
    */
+  @Performance()
   private async cacheModel(modelData: ArrayBuffer): Promise<void> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open('rembg-models', 2);
@@ -600,50 +545,26 @@ export abstract class BaseSession {
     return '1.0.0'; // Default version, can be overridden by subclasses
   }
 
-  /**
-   * Predict masks for input image
-   */
-  async predict(imageCanvas: HTMLCanvasElement): Promise<HTMLCanvasElement[]> {
-    const predictStartTime = performance.now();
-    logInfo(
-      `[${this.modelName}] Starting prediction for ${imageCanvas.width}x${imageCanvas.height} image...`
-    );
-
-    if (!this.session) {
-      const initStart = performance.now();
-      await this.initialize();
-      const initTime = performance.now() - initStart;
-      logPerformance(
-        `[${this.modelName}] Session initialization during predict: ${initTime.toFixed(2)}ms`
-      );
-    }
-
-    if (!this.session) {
-      throw new Error('Session not initialized');
-    }
-
-    // Normalize image for model input
-    const normalizationStart = performance.now();
-    const normalized = normalizeImage(
+  @PerformanceSync()
+  prepareInput(imageCanvas: HTMLCanvasElement): {
+    [inputName: string]: ort.Tensor;
+  } {
+    return normalizeImage(
       imageCanvas,
       this.getNormalizationParams(),
       this.getInputName()
     );
-    const normalizationTime = performance.now() - normalizationStart;
-    logPerformance(
-      `[${this.modelName}] Image normalization: ${normalizationTime.toFixed(2)}ms`
-    );
+  }
 
-    // Run inference
-    const inferenceStart = performance.now();
-    const results = await this.session.run(normalized);
-    const inferenceTime = performance.now() - inferenceStart;
-    logPerformance(
-      `[${this.modelName}] Model inference: ${inferenceTime.toFixed(2)}ms`
-    );
-
-    // Collect profiling data if enabled
-    if (rembgConfig.isONNXProfilingEnabled() && this.session) {
+  @Performance()
+  async runInference(input: {
+    [inputName: string]: ort.Tensor;
+  }): Promise<ort.InferenceSession.OnnxValueMapType> {
+    if (!this.session) {
+      throw new Error('Session not initialized');
+    }
+    const results = await this.session.run(input);
+    if (rembgConfig.isONNXProfilingEnabled()) {
       try {
         this.session.endProfiling();
         logInfo(`[${this.modelName}] ONNX profiling data outputted to console`);
@@ -651,33 +572,76 @@ export abstract class BaseSession {
         logWarn(`[${this.modelName}] Failed to collect profiling data:`, error);
       }
     }
-
-    // Process outputs
-    const processingStart = performance.now();
-    const masks = this.processOutputs(results, {
-      width: imageCanvas.width,
-      height: imageCanvas.height,
-    });
-    const processingTime = performance.now() - processingStart;
-    logPerformance(
-      `[${this.modelName}] Output processing: ${processingTime.toFixed(2)}ms`
-    );
-
-    const totalTime = performance.now() - predictStartTime;
-    logPerformance(
-      `[${this.modelName}] Total prediction time: ${totalTime.toFixed(2)}ms`
-    );
-
-    return masks;
+    return results;
   }
 
   /**
-   * Process model outputs to create masks
+   * Predict masks for input image
    */
-  protected abstract processOutputs(
-    outputs: ort.InferenceSession.OnnxValueMapType,
+  @Performance()
+  async predict(imageCanvas: HTMLCanvasElement): Promise<HTMLCanvasElement[]> {
+    logInfo(
+      `[${this.modelName}] Starting prediction for ${imageCanvas.width}x${imageCanvas.height} image...`
+    );
+
+    if (!this.session) {
+      await this.initialize();
+    }
+
+    if (!this.session) {
+      throw new Error('Session not initialized');
+    }
+
+    // Normalize image for model input
+    const input = this.prepareInput(imageCanvas);
+
+    // Run inference
+    const results = await this.runInference(input);
+    const masks = this.outputToMaskArray(results);
+    logInfo(`[${this.modelName}] Predicted ${masks.length} masks`);
+    return masks.map(mask =>
+      this.maskArrayToMaskCanvas(mask, {
+        width: imageCanvas.width,
+        height: imageCanvas.height,
+      })
+    );
+  }
+
+  /**
+   * generic model output processing
+   *
+   * Most models output a single tensor with shape [1, 1, height, width]
+   * This method extracts the data from the tensor and returns it as a Float32Array
+   * @param outputs - Model outputs
+   * @returns [Mask array]
+   */
+  @PerformanceSync()
+  outputToMaskArray(
+    outputs: ort.InferenceSession.OnnxValueMapType
+  ): Float32Array[] {
+    const outputTensor = outputs[Object.keys(outputs)[0]] as ort.Tensor;
+    const outputData = outputTensor.data as Float32Array;
+
+    return [outputData];
+  }
+
+  /**
+   * Generic mask array to mask canvas processing
+   *
+   * Most models just normalize, resize
+   * and return the result as a mask canvas.
+   *
+   * @param maskArray - Model output mask array
+   * @param originalSize - Original image dimensions for resizing
+   * @returns HTMLCanvasElement
+   */
+  @PerformanceSync()
+  maskArrayToMaskCanvas(
+    maskArray: Float32Array,
     originalSize: { width: number; height: number }
-  ): HTMLCanvasElement[];
+  ): HTMLCanvasElement {
+    return processModelOutput(maskArray, originalSize, this.getOutputShape());
+  }
 
   /**
    * Get model name

@@ -14,6 +14,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "resolveJsonModule": true,
+    "experimentalDecorators": true,
     "moduleResolution": "node",
     "types": ["@webgpu/types"],
     "baseUrl": "."

@@ -3,7 +3,7 @@ import {
   newSession,
   getAvailableModels,
   U2NetClothSegSession,
-  canvasTools,
+  imageUtils as canvasTools,
   rembgConfig,
 } from 'rembg-web';
 
@@ -324,7 +324,7 @@ async function runAllModelTests() {
       console.log(`Starting test for model: ${modelName}`);
 
       // Create session for the model
-      const session = newSession(modelName);
+      const session = await newSession(modelName);
       const modelResults = new Map<
         string,
         { original: Blob; calculated: Blob; expected: Blob }

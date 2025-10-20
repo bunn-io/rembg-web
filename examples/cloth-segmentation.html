@@ -178,7 +178,7 @@
     </div>
 
     <script type="module">
-      const { U2NetClothSegSession, rembgConfig, canvasTools } = RembgWeb;
+      const { U2NetClothSegSession, rembgConfig, imageUtils } = RembgWeb;
 
       // Configure model base URL
       rembgConfig.setBaseUrl(
@@ -259,6 +259,81 @@
         }
       });
 
+      function DisplayResults(resultCanvases) {
+        try {
+          // Validate input
+          if (!Array.isArray(resultCanvases) || resultCanvases.length === 0) {
+            outputContainer.innerHTML = '<p>No results to display.</p>';
+            return;
+          }
+
+          // Prepare container
+          outputContainer.innerHTML = '';
+
+          const grid = document.createElement('div');
+          grid.className = 'comparison-grid';
+
+          // Original image block
+          const originalItem = document.createElement('div');
+          originalItem.className = 'comparison-item';
+          const originalTitle = document.createElement('h4');
+          originalTitle.textContent = 'Original Image';
+          const originalEl = document.createElement('img');
+          if (currentImage && currentImage.src) {
+            originalEl.src = currentImage.src;
+            originalEl.alt = 'Original image';
+          }
+          originalItem.appendChild(originalTitle);
+          originalItem.appendChild(originalEl);
+          grid.appendChild(originalItem);
+
+          // Determine labels based on category
+          const category = categorySelect?.value || 'combined';
+          let labels = [];
+          if (category === 'all') {
+            labels = ['Upper Body', 'Lower Body', 'Full Body'];
+          } else if (category === 'combined') {
+            labels = ['Combined'];
+          } else if (category === 'upper') {
+            labels = ['Upper Body'];
+          } else if (category === 'lower') {
+            labels = ['Lower Body'];
+          } else {
+            labels = ['Full Body'];
+          }
+
+          // Results blocks
+          resultCanvases.forEach((cv, index) => {
+            const item = document.createElement('div');
+            item.className = 'comparison-item';
+            const title = document.createElement('h4');
+            title.textContent = labels[index] || `Result ${index + 1}`;
+            item.appendChild(title);
+
+            // Accept either Canvas or Image-like element
+            if (
+              cv instanceof HTMLCanvasElement ||
+              cv instanceof HTMLImageElement
+            ) {
+              item.appendChild(cv);
+            } else if (cv && cv.canvas instanceof HTMLCanvasElement) {
+              item.appendChild(cv.canvas);
+            } else {
+              const fallback = document.createElement('div');
+              fallback.textContent = 'Unsupported result type';
+              item.appendChild(fallback);
+            }
+
+            grid.appendChild(item);
+          });
+
+          outputContainer.appendChild(grid);
+        } catch (e) {
+          console.error('Failed to display results', e);
+          outputContainer.innerHTML = '<p>Failed to display results.</p>';
+        }
+      }
+
       // Process image
       processBtn.addEventListener('click', async () => {
         if (!session || !currentImage) return;
@@ -284,16 +359,47 @@
 
           showProgress('Running AI model...');
           updateStatus('Running AI model...');
-
+          session.initialize();
+          const input = session.prepareInput(canvas);
+          const results = session.runInference(input);
+          const masks = session.outputToMaskArray(results);
           // Get masks
-          const masks = await session.predict(canvas);
           console.log(`Generated ${masks.length} mask(s)`);
 
           showProgress('Creating composite image...');
           updateStatus('Creating composite image...');
 
-          // Display results
-          displayResults(masks, category, canvas);
+          let finalMasks = [];
+          if (category === 'combined') {
+            finalMasks = [imageUtils.mergeMasks(masks)];
+          } else if (category == 'all') {
+            finalMasks = masks;
+          } else {
+            switch (category) {
+              case 'upper':
+                finalMasks = [masks[0]];
+                break;
+              case 'lower':
+                finalMasks = [masks[1]];
+                break;
+
+              default:
+                finalMasks = [masks[2]];
+                break;
+            }
+          }
+
+          const maskCanvases = finalMasks.map(mask =>
+            session.maskArrayToCanvas(mask, {
+              width: currentImage.naturalWidth,
+              height: currentImage.naturalHeight,
+            })
+          );
+          const resultCanvases = maskCanvases.map(mask =>
+            imageUtils.naiveCutout(canvas, mask)
+          );
+
+          DisplayResults(resultCanvases);
 
           hideProgress();
           hideStatus();
@@ -303,102 +409,6 @@
           hideStatus();
         }
       });
-
-      // Create composite image with masks applied
-      function createCompositeImage(originalCanvas, masks) {
-        const categories = ['Upper Body', 'Lower Body', 'Full Body'];
-        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1']; // Red, Teal, Blue
-
-        // Create composite canvas - 3x height to stack the masks
-        const compositeCanvas = document.createElement('canvas');
-        const compositeCtx = compositeCanvas.getContext('2d');
-        compositeCanvas.width = originalCanvas.width;
-        compositeCanvas.height = originalCanvas.height * 3;
-
-        // Fill with white background
-        compositeCtx.fillStyle = '#ffffff';
-        compositeCtx.fillRect(
-          0,
-          0,
-          compositeCanvas.width,
-          compositeCanvas.height
-        );
-
-        // Draw each mask section
-        masks.forEach((mask, index) => {
-          const yOffset = index * originalCanvas.height;
-
-          const cutout = results.applyRawMask(mask, originalCanvas);
-          // Draw original image
-          compositeCtx.drawImage(cutout, 0, yOffset);
-
-          compositeCtx.fillText(categories[index], 10, yOffset + 25);
-        });
-
-        return compositeCanvas;
-      }
-
-      // Display results
-      function displayResults(masks, category, originalCanvas) {
-        outputContainer.innerHTML = '';
-
-        const comparisonGrid = document.createElement('div');
-        comparisonGrid.className = 'comparison-grid';
-
-        // Original image
-        const originalItem = document.createElement('div');
-        originalItem.className = 'comparison-item';
-        originalItem.innerHTML = `
-          <h4>Original Image</h4>
-          <canvas width="${originalCanvas.width}" height="${originalCanvas.height}"></canvas>
-        `;
-        const originalCanvasElement = originalItem.querySelector('canvas');
-        const originalCtx = originalCanvasElement.getContext('2d');
-        originalCtx.drawImage(originalCanvas, 0, 0);
-        comparisonGrid.appendChild(originalItem);
-
-        // Composite image with masks applied
-        const compositeItem = document.createElement('div');
-        compositeItem.className = 'comparison-item';
-
-        if (category === 'combined') {
-          const combinedMask = results.mergeMasks(masks);
-          const cutout = results.applyRawMask(combinedMask, originalCanvas);
-          const title = 'Combined Clothing Mask';
-          compositeItem.innerHTML = `
-            <h4>${title}</h4>
-            <canvas width="${cutout.width}" height="${cutout.height}"></canvas>
-          `;
-          const canvas = compositeItem.querySelector('canvas');
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(cutout, 0, 0);
-        } else if (masks.length === 1) {
-          const cutout = results.applyRawMask(masks[0], originalCanvas);
-
-          const title = `${category.charAt(0).toUpperCase() + category.slice(1)} Body Cloth`;
-
-          compositeItem.innerHTML = `
-            <h4>${title}</h4>
-            <canvas width="${cutout.width}" height="${cutout.height}"></canvas>
-          `;
-          const canvas = compositeItem.querySelector('canvas');
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(cutout, 0, 0);
-        } else {
-          // Multiple masks - create composite
-          const compositeCanvas = createCompositeImage(originalCanvas, masks);
-          compositeItem.innerHTML = `
-            <h4>All Clothing Segments</h4>
-            <canvas width="${compositeCanvas.width}" height="${compositeCanvas.height}"></canvas>
-          `;
-          const canvas = compositeItem.querySelector('canvas');
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(compositeCanvas, 0, 0);
-        }
-
-        comparisonGrid.appendChild(compositeItem);
-        outputContainer.appendChild(comparisonGrid);
-      }
 
       // Clear results
       clearBtn.addEventListener('click', () => {

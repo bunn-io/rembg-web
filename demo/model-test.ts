@@ -3,7 +3,7 @@ import {
   newSession,
   getAvailableModels,
   U2NetClothSegSession,
-  canvasTools,
+  imageUtils as canvasTools,
   rembgConfig,
 } from 'rembg-web';
 

@@ -189,3 +189,129 @@ export function enableONNXProfiling(enable: boolean): void {
 export function isONNXProfilingEnabled(): boolean {
   return rembgConfig.isONNXProfilingEnabled();
 }
+
+/**
+ * Performance decorator for async functions.
+ *
+ * Automatically logs function execution time when performance logging is enabled.
+ * Works with async functions and returns the original function's result.
+ *
+ * @param functionName - Optional custom name for logging (defaults to function name)
+ * @returns Decorator function
+ *
+ * @example
+ * ```typescript
+ * class MyClass {
+ *   @Performance('processImage')
+ *   async processImage(imageData: ImageData): Promise<HTMLCanvasElement> {
+ *     // Function implementation
+ *     return result;
+ *   }
+ * }
+ *
+ * // Or with automatic naming
+ * @Performance()
+ * async loadModel(): Promise<void> {
+ *   // Function implementation
+ * }
+ * ```
+ */
+export function Performance(functionName?: string) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
+    const originalMethod = descriptor.value;
+    const name = functionName || propertyKey;
+
+    descriptor.value = async function (...args: any[]) {
+      const startTime = performance.now();
+      logPerformance(`[${name}] Starting execution...`);
+
+      try {
+        const result = await originalMethod.apply(this, args);
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        logPerformance(
+          `[${name}] Completed successfully: ${duration.toFixed(2)}ms`
+        );
+
+        return result;
+      } catch (error) {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        logError(`[${name}] Failed after ${duration.toFixed(2)}ms:`, error);
+
+        throw error;
+      }
+    };
+
+    return descriptor;
+  };
+}
+
+/**
+ * Performance decorator for synchronous functions.
+ *
+ * Automatically logs function execution time when performance logging is enabled.
+ * Works with synchronous functions and returns the original function's result.
+ *
+ * @param functionName - Optional custom name for logging (defaults to function name)
+ * @returns Decorator function
+ *
+ * @example
+ * ```typescript
+ * class MyClass {
+ *   @PerformanceSync('normalizeImage')
+ *   normalizeImage(imageData: ImageData): Float32Array {
+ *     // Function implementation
+ *     return result;
+ *   }
+ * }
+ *
+ * // Or with automatic naming
+ * @PerformanceSync()
+ * calculateDimensions(width: number, height: number): { width: number; height: number } {
+ *   // Function implementation
+ * }
+ * ```
+ */
+export function PerformanceSync(functionName?: string) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
+    const originalMethod = descriptor.value;
+    const name = functionName || propertyKey;
+
+    descriptor.value = function (...args: any[]) {
+      const startTime = performance.now();
+      logPerformance(`[${name}] Starting execution...`);
+
+      try {
+        const result = originalMethod.apply(this, args);
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        logPerformance(
+          `[${name}] Completed successfully: ${duration.toFixed(2)}ms`
+        );
+
+        return result;
+      } catch (error) {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        logError(`[${name}] Failed after ${duration.toFixed(2)}ms:`, error);
+
+        throw error;
+      }
+    };
+
+    return descriptor;
+  };
+}

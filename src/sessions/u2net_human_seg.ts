@@ -1,6 +1,5 @@
-import * as ort from 'onnxruntime-web';
 import { BaseSession, SessionOptions } from './base';
-import { NormalizationParams, processModelOutput } from '../utils/image';
+import { NormalizationParams } from '../utils/image';
 import { rembgConfig } from '../config';
 
 /**
@@ -55,7 +54,12 @@ export class U2NetHumanSegSession extends BaseSession {
    * Get the input tensor name for U2Net Human Segmentation
    */
   protected getInputName(): string {
-    return 'input.1';
+    if (this.session) {
+      // Get the first input name dynamically like Python version
+      return this.session.inputNames[0];
+    }
+    // Fallback to common input name for U2Net Human Segmentation models
+    return 'input_image';
   }
 
   /**
@@ -63,30 +67,6 @@ export class U2NetHumanSegSession extends BaseSession {
    */
   protected getOutputShape(): [number, number, number, number] {
     return [1, 1, 320, 320];
-  }
-
-  /**
-   * Process U2Net Human Segmentation model outputs to create masks
-   * Matches Python logic: pred = ort_outs[0][:, 0, :, :], min/max normalization, squeeze, resize
-   */
-  protected processOutputs(
-    outputs: ort.InferenceSession.OnnxValueMapType,
-    originalSize: { width: number; height: number }
-  ): HTMLCanvasElement[] {
-    // U2Net Human Segmentation outputs a single tensor with shape [1, 1, 320, 320]
-    // Python: pred = ort_outs[0][:, 0, :, :]
-    const outputTensor = outputs[Object.keys(outputs)[0]] as ort.Tensor;
-    const outputData = outputTensor.data as Float32Array;
-
-    // Process the output to create mask canvas
-    // This matches the Python min/max normalization and squeeze logic
-    const maskCanvas = processModelOutput(
-      outputData,
-      originalSize,
-      this.getOutputShape()
-    );
-
-    return [maskCanvas];
   }
 
   /**
